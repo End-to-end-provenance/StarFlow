@@ -1,3 +1,0 @@
-PATH_TO_PYTHON='/opt/local/bin/python'
-DEFAULT_CALLMODE='DIRECT'
-PYTHONPATH=''

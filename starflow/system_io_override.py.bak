@@ -72,7 +72,7 @@ the case for automatic logging and other interactive features of enhanced
 python shells like iPython, which I tend to want to use.) 
 '''
 
-import builtins
+import __builtin__
 import sys
 import inspect
 import shutil
@@ -101,7 +101,7 @@ def IsntProtected(r):
         if r[0] != '/':
             r = normpath(getcwd() + '/' + r)
             
-        if 'ProtectedPathsListFile' in list(env.keys()):
+        if 'ProtectedPathsListFile' in env.keys():
             ProtList = [x for x in open(env['ProtectedPathsListFile'],'r').split('\n') if not x.strip(' ').startswith('#')]
         else:
             ProtList = [WORKING_DE.root_dir]
@@ -152,7 +152,7 @@ def GetDependsCreates():
     while not AtTop:
         Fr = sys._getframe(level)
         name = Fr.f_code.co_name
-        if name in list(Fr.f_globals.keys()):
+        if name in Fr.f_globals.keys():
             func = Fr.f_globals[name]
             if hasattr(func, '__depends_on__'):
                 dlist += MakeT(func.__depends_on__)
@@ -182,15 +182,15 @@ def GetDependsCreates():
 def io_override(DE):
     global WORKING_DE
     WORKING_DE = DE
-    old_open = builtins.open
+    old_open = __builtin__.open
     def system_open(ToOpen,Mode='r',bufsize=1):
         [DependencyList,CreatesList] = GetDependsCreates()
         if IsntProtected(ToOpen) or any([PathAlong(ToOpen,r) for r in CreatesList]) if ('w' in Mode or 'a' in Mode) else any([PathAlong(ToOpen,r) for r in CreatesList + DependencyList]):  
             return old_open(ToOpen,Mode,bufsize)
         else:
-            print(funcname(),caller(3),ToOpen if ('w' in Mode or 'a' in Mode) else None,DependencyList,CreatesList)
+            print funcname(),caller(3),ToOpen if ('w' in Mode or 'a' in Mode) else None,DependencyList,CreatesList
             raise BadCheckError(funcname(),ToOpen if 'r' in Mode else None,ToOpen if ('w' in Mode or 'a' in Mode) else None,DependencyList,CreatesList)
-    builtins.open = system_open
+    __builtin__.open = system_open
     
     
     old_copy = shutil.copy
@@ -227,7 +227,7 @@ def io_override(DE):
     
     
     old_mkdir = os.mkdir
-    def system_mkdir(DirName,mode=0o777):
+    def system_mkdir(DirName,mode=0777):
         CreatesList = GetDependsCreates()[1]
         if IsntProtected(DirName) or sum([PathAlong(DirName,r) for r in CreatesList]) > 0:
             old_mkdir(DirName,mode)
@@ -237,7 +237,7 @@ def io_override(DE):
     
     
     
-    def old_makedirs(DirName,mode=0o777):
+    def old_makedirs(DirName,mode=0777):
         if not old_exists(DirName):
             DirName = DirName.rstrip('/')
             [cont,loc] = os.path.split(DirName)
@@ -245,9 +245,9 @@ def io_override(DE):
                 old_makedirs(cont)
             old_mkdir(DirName)
         else:
-            raise ValueError("Directory already exists.")
+            raise ValueError, "Directory already exists."
     
-    def system_makedirs(DirName,mode=0o777):
+    def system_makedirs(DirName,mode=0777):
         CreatesList = GetDependsCreates()[1]
         if IsntProtected(DirName) or any([PathAlong(DirName,r) or PathAlong(r,DirName) for r in CreatesList]):
             old_makedirs(DirName,mode)   
@@ -255,7 +255,7 @@ def io_override(DE):
             raise BadCheckError(funcname(),None,DirName,[],CreatesList)
     os.makedirs = system_makedirs
 
-    def old_makedirs2(DirName,mode=0o777):
+    def old_makedirs2(DirName,mode=0777):
         if not old_exists(DirName):
             DirName = DirName.rstrip('/')
             [cont,loc] = os.path.split(DirName)
@@ -263,7 +263,7 @@ def io_override(DE):
                 old_makedirs(cont)
             old_mkdir(DirName)
     
-    def system_makedirs2(DirName,mode=0o777):
+    def system_makedirs2(DirName,mode=0777):
         CreatesList = GetDependsCreates()[1]
         if IsntProtected(DirName) or any([PathAlong(DirName,r) or PathAlong(r,DirName) for r in CreatesList]):
             old_makedirs2(DirName,mode)   

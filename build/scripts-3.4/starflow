@@ -1,0 +1,8 @@
+#!/Users/jen/miniconda3/envs/python3.4/bin/python
+from starflow import cli
+
+if __name__ == '__main__':
+    try:
+        cli.main()
+    except KeyboardInterrupt:
+        print "Interrupted, exiting."

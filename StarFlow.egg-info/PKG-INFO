@@ -1,0 +1,24 @@
+Metadata-Version: 1.1
+Name: StarFlow
+Version: 0.9999
+Summary: StarFlow is....
+Home-page: http://web.mit.edu/star/flow
+Author: Daniel Yamins
+Author-email: dyamins@gmail.com
+License: LGPL3
+Download-URL: http://web.mit.edu/stardev/flow
+Description: 
+            StarFlow is really...
+            
+Platform: UNKNOWN
+Classifier: Environment :: Console
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Other Audience
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: System :: Distributed Computing

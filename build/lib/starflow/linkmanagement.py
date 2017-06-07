@@ -201,12 +201,12 @@ def GetImpliedLinks(NewLinks, LinkList):
         for (S,T) in [(NL,All),(All,NL)]:
             TT = T[T['LinkType'] == 'CreatedBy'].copy()
             if len(S) > 0 and len(TT) > 0:
-                L1 = numpy.rec.fromrecords(uniqify(list(zip(TT['LinkTarget'],TT['TargetFile'],TT['UpdateScript'],TT['UpdateScriptFile']))),names=['Object','ObjectFile','Script','ScriptFile'])
+                L1 = numpy.rec.fromrecords(uniqify(zip(TT['LinkTarget'],TT['TargetFile'],TT['UpdateScript'],TT['UpdateScriptFile'])),names=['Object','ObjectFile','Script','ScriptFile'])
                 L1.sort(order = ['ObjectFile'])
-                L2 = numpy.rec.fromrecords(uniqify(list(zip(S['LinkSource'],S['SourceFile']))) + uniqify(list(zip(S['LinkTarget'],S['TargetFile']))),names=['Object','ObjectFile'])
+                L2 = numpy.rec.fromrecords(uniqify(zip(S['LinkSource'],S['SourceFile'])) + uniqify(zip(S['LinkTarget'],S['TargetFile'])),names=['Object','ObjectFile'])
                 L2.sort(order = ['ObjectFile'])
                 [A,B] = getpathalong(L1['ObjectFile'],L2['ObjectFile'])
-                F1 = [list(range(A[i],B[i])) for i in range(len(L1))]
+                F1 = [range(A[i],B[i]) for i in range(len(L1))]
                 NewRecs += ListUnion([[('Implied',L1['Object'][i],L1['ObjectFile'][i],L2['Object'][j],L2['ObjectFile'][j],L1['Script'][i],L1['ScriptFile'][i],0) for j in F1[i]] for i in range(len(F1))])
                 
         if len(NewRecs) > 0:
@@ -243,13 +243,13 @@ def GetDummyLinks(NewLinks,LinkList):
         if len(NewC) > 0:
             NewRecs = []
             for (NL,AllC) in [(NewC,TotalC),(TotalC,NewC)]:         
-                L1 = numpy.rec.fromrecords(uniqify(list(zip(AllC['LinkTarget'],AllC['TargetFile']))),names = ['LinkTarget','TargetFile'])
-                L2 = numpy.rec.fromrecords(uniqify(list(zip(NL['LinkTarget'],NL['TargetFile'],NL['UpdateScript'],NL['UpdateScriptFile']))),names = ['LinkTarget','TargetFile','UpdateScript','UpdateScriptFile'])
+                L1 = numpy.rec.fromrecords(uniqify(zip(AllC['LinkTarget'],AllC['TargetFile'])),names = ['LinkTarget','TargetFile'])
+                L2 = numpy.rec.fromrecords(uniqify(zip(NL['LinkTarget'],NL['TargetFile'],NL['UpdateScript'],NL['UpdateScriptFile'])),names = ['LinkTarget','TargetFile','UpdateScript','UpdateScriptFile'])
                             
                 C = numpy.array([a + ' ; ' + b for (a,b) in zip(L2['UpdateScript'],L2['TargetFile'])])
                 s = C.argsort(); C = C[s]; L2 = L2[s]
                 [A,B] = getpathstrictlyalong(C,C)
-                G = numpy.array(ListUnion([list(range(a,b)) for (a,b) in zip(A,B)])); G.sort()
+                G = numpy.array(ListUnion([range(a,b) for (a,b) in zip(A,B)])); G.sort()
                 D = numpy.arange(len(L2))
                 L2 = L2[numpy.invert(fastisin(D,G))]
         
@@ -291,7 +291,7 @@ def GutsComputeLinks(FileList):
         if StoredModule:   #<-- if stored version f information is sucessfully obtained,  go ahead
             SucceededList += [opfile]   
             ModuleName = '.'.join(opfile.split('/')[1:-1] + [inspect.getmodulename(opfile)])    #get name of module from file name, assuming it's in the system standard convention formation, starting with '../' relative to Temp directory
-            for op in list(StoredModule.keys()):   #for each function  or class defined in the stored module: 
+            for op in StoredModule.keys():   #for each function  or class defined in the stored module: 
                 if StoredModule[op].descr == 'Internal Function' or  StoredModule[op].descr == 'Internal Class':    
                     opn = StoredModule[op].reconstitute()   #reconstitute the object, 
                     opname = ModuleName + '.' + op     
@@ -312,7 +312,7 @@ def GutsComputeLinks(FileList):
                     OpPaths = [x[0] if x else 'NOTEXIST' for x in OpPaths]
                     LinkList += [('Uses',a[0],oppath,opname,opfile,'None',opfile,IsFast) for (a,oppath) in zip(Uses,OpPaths) if a[0] != opname]   #and produce Uses links from them
         else:
-            print('No links for ', opfile, 'being processed because module failed to load properly.')
+            print  'No links for ', opfile, 'being processed because module failed to load properly.'
             
     return [LinkList,SucceededList]
 
@@ -336,7 +336,7 @@ def ComputeLinksFromOperations(FileList):
 
 
 def GetStoredAttributes(op,name,NoVal=None):
-    if 'func_dict' in list(op.keys()):
+    if 'func_dict' in op.keys():
         if op['func_dict'] != None:
             return op['func_dict'].get(name,NoVal)
         else:
@@ -381,7 +381,7 @@ def GetStoredDefaultVal(op,name,NoVal=None):
         numargs = op['func_code'].co_argcount
         vars = op['func_code'].co_varnames[:numargs]
         numdefaults = len(op['func_defaults'])
-        defaultvars = dict(list(zip(vars[len(vars) - numdefaults:],op['func_defaults'])))
+        defaultvars = dict(zip(vars[len(vars) - numdefaults:],op['func_defaults']))
         return defaultvars.get(name,NoVal)
     else:
         return NoVal
@@ -483,7 +483,7 @@ def GetII(LinkList,Seed):
             [A,B] = getpathalong(LinkList['SourceFile'],PSeed)
             II2 = (B>A).nonzero()[0].tolist()
             [A,B] = getpathalong(PSeed,LinkList['SourceFile'])
-            II3 = ListUnion([list(range(A[i],B[i])) for i in range(len(A))])
+            II3 = ListUnion([range(A[i],B[i]) for i in range(len(A))])
             #II = numpy.array(list(set(II1).intersection(II2 + II3)))
             II = numpy.array(list(set(II1).intersection(II3)))
             if len(II) > 0:
@@ -505,7 +505,7 @@ def GetII(LinkList,Seed):
             DSeedM = numpy.array(['../' + x.replace('.','/') for x in DSeed])
             USM = numpy.array(['../' + x.replace('.','/') for x in LinkList['UpdateScript']])
             [A,B] = getpathalong(DSeedM,USM)
-            II3 = ListUnion([list(range(A[i],B[i])) for i in range(len(A))])      
+            II3 = ListUnion([range(A[i],B[i]) for i in range(len(A))])      
             II = numpy.array(list(set(II1).intersection(II3)))
     
             if len(II):
@@ -655,11 +655,11 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
     II = list(GetII(LinkList,Seed))
     if len(II) == 0:
         return []
-    Sources = uniqify(list(zip(LinkList['SourceFile'][II],LinkList['LinkSource'][II])))
+    Sources = uniqify(zip(LinkList['SourceFile'][II],LinkList['LinkSource'][II]))
     
     
     if Simple:
-        print('WARNING: Using "simple" mode;  propagation may not be complete.')
+        print 'WARNING: Using "simple" mode;  propagation may not be complete.'
     
     MtimesDict = ListFindMtimes(Sources,HoldTimes,Simple)
     UpdateList = [(i,MtimesDict[LinkList['LinkSource'][i]],'') for i in II]
@@ -672,13 +672,13 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
     
     while len(UpdateList) > 0:  
         
-        NewSources = [(LinkList['TargetFile'][i[0]], LinkList['LinkTarget'][i[0]]) for i in UpdateList if LinkList['LinkTarget'][i[0]] not in list(MtimesDict.keys())]
+        NewSources = [(LinkList['TargetFile'][i[0]], LinkList['LinkTarget'][i[0]]) for i in UpdateList if LinkList['LinkTarget'][i[0]] not in MtimesDict.keys()]
         
         if len(NewSources) > 0:
             NewMtimes = ListFindMtimes(NewSources,HoldTimes,Simple)
             MtimesDict.update(NewMtimes)
         if ProtectComputed:
-            NewPtimes =  [(LinkList['LinkTarget'][i[0]], FindPtime(LinkList['LinkTarget'][i[0]],Simple=Simple)) for i in UpdateList if LinkList['LinkTarget'][i[0]] not in list(PtimesDict.keys())]   
+            NewPtimes =  [(LinkList['LinkTarget'][i[0]], FindPtime(LinkList['LinkTarget'][i[0]],Simple=Simple)) for i in UpdateList if LinkList['LinkTarget'][i[0]] not in PtimesDict.keys()]   
             PtimesDict.update(dict(NewPtimes))
         else:
             PtimesDict = {}
@@ -693,26 +693,26 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
         TargetArray.sort(order=['LinkTarget'])
         Targets = TargetArray['LinkTarget']; Times = TargetArray['OutMarkTime']; LinkNumbers = TargetArray['LinkNumber']        
         [A,B] = fastequalspairs(LinkList['LinkSource'],Targets)         
-        L1 = [(i, Max(Times[list(range(A[i],B[i]))]) , ','.join(uniqify(LinkNumbers[list(range(A[i],B[i]))].tolist()))) for i in range(len(LinkList)) if A[i] < B[i]]
+        L1 = [(i, Max(Times[range(A[i],B[i])]) , ','.join(uniqify(LinkNumbers[range(A[i],B[i])].tolist()))) for i in range(len(LinkList)) if A[i] < B[i]]
         CreateTargetArray = TargetArray[TargetArray['LinkType'] == 'CreatedBy']
         if len(CreateTargetArray) > 0:
             CreateTargets = CreateTargetArray['LinkTarget']; CreateTimes = CreateTargetArray['OutMarkTime']; CreateLinkNumbers = CreateTargetArray['LinkNumber']
             [A,B] = getpathalong(LinkList['LinkSource'],CreateTargets)      
-            L2 = [(i, Max(CreateTimes[list(range(A[i],B[i]))]), ','.join(uniqify(CreateLinkNumbers[list(range(A[i],B[i]))].tolist()))) for i in range(len(LinkList)) if A[i] < B[i]]
+            L2 = [(i, Max(CreateTimes[range(A[i],B[i])]), ','.join(uniqify(CreateLinkNumbers[range(A[i],B[i])].tolist()))) for i in range(len(LinkList)) if A[i] < B[i]]
             [A,B] = getpathalong(CreateTargets,LinkList['LinkSource']) 
             FF = [((A <= j) & (B > j)).nonzero()[0] for j in range(len(LinkList))]
-            EE = ListUnion([list(range(A[l],B[l])) for l in range(len(A))])
-            NewMtimes = [(LinkList['LinkSource'][i], FindMtime(LinkList['SourceFile'][i],objectname = LinkList['LinkSource'][i],Simple=Simple) if PathExists(LinkList['SourceFile'][i]) else nan) for i in EE if LinkList['LinkSource'][i] not in list(MtimesDict.keys())]
+            EE = ListUnion([range(A[l],B[l]) for l in range(len(A))])
+            NewMtimes = [(LinkList['LinkSource'][i], FindMtime(LinkList['SourceFile'][i],objectname = LinkList['LinkSource'][i],Simple=Simple) if PathExists(LinkList['SourceFile'][i]) else nan) for i in EE if LinkList['LinkSource'][i] not in MtimesDict.keys()]
             MtimesDict.update(dict(NewMtimes))  
             if ProtectComputed:
-                NewPtimes = [(LinkList['LinkSource'][i], FindPtime(LinkList['LinkSource'][i],Simple=Simple)) for i in EE if LinkList['LinkSource'][i] not in list(PtimesDict.keys())]
+                NewPtimes = [(LinkList['LinkSource'][i], FindPtime(LinkList['LinkSource'][i],Simple=Simple)) for i in EE if LinkList['LinkSource'][i] not in PtimesDict.keys()]
                 PtimesDict.update(dict(NewPtimes))              
             L3 = [(i,Max(CreateTimes[FF[i]]),','.join(uniqify(CreateLinkNumbers[FF[i]].tolist()))) for i in range(len(LinkList)) if len(FF[i]) > 0]
             UpdateList = uniqify(L1 + L2 + L3)
         else:
             UpdateList = L1
         if any([set(l) <= set(UpdateList) for l in UpdateLists]):
-            print('There was a circularity involving at some of the links in' , uniqify(LinkList[[i[0] for i in UpdateList]]['LinkSource'].tolist()) , '. Further updates will be canceled.')
+            print 'There was a circularity involving at some of the links in' , uniqify(LinkList[[i[0] for i in UpdateList]]['LinkSource'].tolist()) , '. Further updates will be canceled.'
             return LinkList[0:0]
         else:
             UpdateLists += [UpdateList]
@@ -799,10 +799,10 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
         [A,B] = getpathalong(LinkList[N1],TargetList[N2])
         L2 = [i for i in range(len(LinkList)) if (TargetList['LinkType'][A[i]:B[i]] == Special).any()]
         [A,B] = getpathalong(TargetList[N2],LinkList[N1])   
-        L3 = set((TargetList['LinkType'] == Special).nonzero()[0]).intersection(ListUnion([list(range(a,b)) for (a,b) in zip(A,B) if b > a]))
+        L3 = set((TargetList['LinkType'] == Special).nonzero()[0]).intersection(ListUnion([range(a,b) for (a,b) in zip(A,B) if b > a]))
         UpdateList = uniqify(L1 + L2 + list(L3))
         if any([set(l) <= set(UpdateList) for l in UpdateLists]):
-            print('There was a circularity involving at least some of the links generated by the scripts' , set([LinkList['UpdateScript'][i] for i in UpdateList]) , '. Updates will be canceled.')
+            print 'There was a circularity involving at least some of the links generated by the scripts' , set([LinkList['UpdateScript'][i] for i in UpdateList]) , '. Updates will be canceled.'
             return LinkList[0:0]
         else:
             UpdateLists += [UpdateList]
@@ -817,7 +817,7 @@ def GetI(List,Seed):
     [A,B] = getpathalong(List,Seed)
     C1 = (B > A).nonzero()[0].tolist()
     [A,B] = getpathalong(Seed,List)
-    C2 = ListUnion([list(range(a,b)) for (a,b) in zip(A,B) if b > a])
+    C2 = ListUnion([range(a,b) for (a,b) in zip(A,B) if b > a])
     I = numpy.array(uniqify(C1 + C2))
     if len(I) > 0:
         return s[I]
@@ -855,14 +855,14 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
     if level > 0:
         P = PropagateThroughLinkGraph(Seed,LinkList)
         if len(P) < level:
-            print('There are no create targets', level, 'levels from the the seed', Seed, '.')
+            print 'There are no create targets', level, 'levels from the the seed', Seed, '.'
             return set([])
         else:
             return set(P[level-1]['LinkTarget'])
     elif level < 0:
         P = PropagateUpThroughLinkGraph(Seed,LinkList)
         if len(P) < abs(level):
-            print('There are no dependencies', level, 'levels from the the seed', Seed, '.')
+            print 'There are no dependencies', level, 'levels from the the seed', Seed, '.'
             return set([])
         else:
             return set(P[abs(level+1)]['LinkSource'])
@@ -913,7 +913,7 @@ def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices =
             s = LinkList.argsort(order = ['LinkTarget'])
             LinkList = LinkList[s]
             [A,B] = getpathalong(Exceptions,LinkList['LinkTarget'])
-            R = ListUnion([list(range(A[i],B[i])) for i in range(len(A))])
+            R = ListUnion([range(A[i],B[i]) for i in range(len(A))])
             if len(R) > 0:
                 ExcpT = fastisin(numpy.arange(len(LinkList)),s[numpy.array(R)])
             else:
@@ -929,7 +929,7 @@ def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices =
             LTM = numpy.array(['../' + ss.replace('.','/') for ss in LinkList['UpdateScript']])
             DEM = numpy.array(['../' + ss.replace('.','/') for ss in DExceptions])
             [A,B] = getpathalong(DEM,LTM)
-            R = ListUnion([list(range(A[i],B[i])) for i in range(len(A))])
+            R = ListUnion([range(A[i],B[i]) for i in range(len(A))])
             if len(R) > 0:
                 ExcpS = fastisin(numpy.arange(len(LinkList)),s[numpy.array(R)])
             else:

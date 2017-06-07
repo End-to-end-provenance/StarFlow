@@ -1,0 +1,3 @@
+tabular
+networkx
+numpy>=1.3

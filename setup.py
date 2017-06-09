@@ -2,6 +2,7 @@
 
 from setuptools import setup
 from distribute_setup import use_setuptools
+
 use_setuptools()
 
 setup(
@@ -12,6 +13,7 @@ setup(
     scripts=['bin/starflow',],
 
     install_requires=[
+        # Remove tabular from this list?
         "tabular",
         "networkx",
         "numpy>=1.3",

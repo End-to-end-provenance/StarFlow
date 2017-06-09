@@ -6,7 +6,7 @@ import starflow
 from starflow.logger import log
 from starflow import de
 
-from .base import CmdBase
+from base import CmdBase
 
 class CmdShell(CmdBase):
     """
@@ -36,7 +36,7 @@ class CmdShell(CmdBase):
             try:
                 __import__(fullname)
                 locals()[modname] = sys.modules[fullname]
-            except ImportError as e:
+            except ImportError,e:
                 log.error("Error loading module %s: %s" % (modname, e))
         log.info("Importing data environment manager object as DE_MANAGER")
         locals()["DE_MANAGER"] = DE_MANAGER
@@ -49,13 +49,13 @@ class CmdShell(CmdBase):
         
         os.chdir(WORKING_DE.temp_dir)
         
-        print('\n... done loading.  May the Organization be with you as you journey through the Land of Data.') 
+        print '\n... done loading.  May the Organization be with you as you journey through the Land of Data.' 
                                     
         try:
             import IPython.Shell
             ipy_shell = IPython.Shell.IPShellEmbed(argv=[])
             ipy_shell()
-        except ImportError as e:
+        except ImportError,e:
             def ipy_shell():
                 log.error("Unable to load IPython.")
                 log.error("Please check that IPython is installed and working.")

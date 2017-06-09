@@ -2,7 +2,7 @@
 
 import optparse
 
-from base import CmdBase
+from .base import CmdBase
 
 class CmdHelp(CmdBase):
     """
@@ -24,4 +24,3 @@ class CmdHelp(CmdBase):
                 raise SystemExit("Error: invalid command '%s'" % cmdname)
         else:
             self.gparser.parse_args(['--help'])
-

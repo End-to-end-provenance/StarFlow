@@ -118,7 +118,7 @@ class DirCompleter:
     """Completes by listing subdirectories only."""
 
     def __call__(self, pwd, line, point, prefix, suffix):
-        return list(filter(isdir, os.listdir(pwd)))
+        return filter(isdir, os.listdir(pwd))
 
 class RegexCompleter:
 
@@ -128,11 +128,11 @@ class RegexCompleter:
     def __init__(self, regexlist, always_dirs=True):
         self.always_dirs = always_dirs
 
-        if isinstance(regexlist, bytes):
+        if isinstance(regexlist, types.StringType):
             regexlist = [regexlist]
         self.regexlist = []
         for r in regexlist:
-            if isinstance(r, bytes):
+            if isinstance(r, types.StringType):
                 r = re.compile(r)
             self.regexlist.append(r)
 
@@ -219,7 +219,7 @@ def autocomplete(parser,
 
     # If we are not requested for complete, simply return silently, let the code
     # caller complete. This is the normal path of execution.
-    if 'OPTPARSE_AUTO_COMPLETE' not in os.environ:
+    if not os.environ.has_key('OPTPARSE_AUTO_COMPLETE'):
         return
 
     # Set default completers.
@@ -243,7 +243,7 @@ def autocomplete(parser,
 
     # zsh's bashcompinit does not pass COMP_WORDS, replace with
     # COMP_LINE for now...
-    if 'COMP_WORDS' not in os.environ:
+    if not os.environ.has_key('COMP_WORDS'):
         os.environ['COMP_WORDS'] = os.environ['COMP_LINE']
 
     cwords = os.environ['COMP_WORDS'].split()
@@ -255,11 +255,11 @@ def autocomplete(parser,
     # If requested, try subcommand syntax to find an options parser for that
     # subcommand.
     if subcommands:
-        assert isinstance(subcommands, dict)
+        assert isinstance(subcommands, types.DictType)
         value = guess_first_nonoption(parser, subcommands)
         if value:
-            if isinstance(value, list) or \
-               isinstance(value, tuple):
+            if isinstance(value, types.ListType) or \
+               isinstance(value, types.TupleType):
                 parser = value[0]
                 if len(value) > 1 and value[1]:
                     # override completer for command if it is present.
@@ -319,17 +319,17 @@ def autocomplete(parser,
 
     # Options completion.
     if not optarg and (not prefix or prefix.startswith('-')):
-        completions += list(parser._short_opt.keys())
-        completions += list(parser._long_opt.keys())
+        completions += parser._short_opt.keys()
+        completions += parser._long_opt.keys()
         # Note: this will get filtered properly below.
 
     # File completion.
     if completer and (not prefix or not prefix.startswith('-')):
 
         # Call appropriate completer depending on type.
-        if isinstance(completer, bytes) or \
-               isinstance(completer, list) or \
-               isinstance(completer, tuple):
+        if isinstance(completer, types.StringType) or \
+               isinstance(completer, types.ListType) or \
+               isinstance(completer, types.TupleType):
 
             completer = RegexCompleter(completer)
             completions += completer(os.getcwd(), cline, cpoint, prefix, suffix)
@@ -337,32 +337,32 @@ def autocomplete(parser,
 
         elif isinstance(completer, types.FunctionType) or \
              isinstance(completer, types.LambdaType) or \
-             isinstance(completer, type) or \
-             isinstance(completer, object):
+             isinstance(completer, types.ClassType) or \
+             isinstance(completer, types.ObjectType):
             completions += completer(os.getcwd(), cline, cpoint, prefix, suffix)
 
     # Filter using prefix.
     if prefix:
-        completions = [x for x in completions if x.startswith(prefix)]
+        completions = filter(lambda x: x.startswith(prefix), completions)
 
     # Print result.
-    print(' '.join(completions))
+    print ' '.join(completions)
 
     # Print debug output (if needed).  You can keep a shell with 'tail -f' to
     # the log file to monitor what is happening.
     if debugfn:
         f = open(debugfn, 'a')
-        print('---------------------------------------------------------', file=f)
-        print('CWORDS', cwords, file=f)
-        print('CLINE', cline, file=f)
-        print('CPOINT', cpoint, file=f)
-        print('CWORD', cword, file=f)
-        print('\nShort options', file=f)
-        print(pformat(parser._short_opt), file=f)
-        print('\nLong options', file=f)
-        print(pformat(parser._long_opt), file=f)
-        print('Prefix/Suffix:', prefix, suffix, file=f)
-        print('completions', completions, file=f)
+        print >> f, '---------------------------------------------------------'
+        print >> f, 'CWORDS', cwords
+        print >> f, 'CLINE', cline
+        print >> f, 'CPOINT', cpoint
+        print >> f, 'CWORD', cword
+        print >> f, '\nShort options'
+        print >> f, pformat(parser._short_opt)
+        print >> f, '\nLong options'
+        print >> f, pformat(parser._long_opt)
+        print >> f, 'Prefix/Suffix:', prefix, suffix
+        print >> f, 'completions', completions
         f.close()
 
     # Exit with error code (we do not let the caller continue on purpose, this
@@ -441,15 +441,15 @@ class CmdComplete:
 
 
 def test():
-    print(extract_word("extraire un mot d'une phrase", 11))
-    print(extract_word("extraire un mot d'une phrase", 12))
-    print(extract_word("extraire un mot d'une phrase", 13))
-    print(extract_word("extraire un mot d'une phrase", 14))
-    print(extract_word("extraire un mot d'une phrase", 0))
-    print(extract_word("extraire un mot d'une phrase", 28))
-    print(extract_word("extraire un mot d'une phrase", 29))
-    print(extract_word("extraire un mot d'une phrase", -2))
-    print(extract_word("optcomplete-test do", 19))
+    print extract_word("extraire un mot d'une phrase", 11)
+    print extract_word("extraire un mot d'une phrase", 12)
+    print extract_word("extraire un mot d'une phrase", 13)
+    print extract_word("extraire un mot d'une phrase", 14)
+    print extract_word("extraire un mot d'une phrase", 0)
+    print extract_word("extraire un mot d'une phrase", 28)
+    print extract_word("extraire un mot d'une phrase", 29)
+    print extract_word("extraire un mot d'une phrase", -2)
+    print extract_word("optcomplete-test do", 19)
 
 if __name__ == '__main__':
     test()

@@ -1,5 +1,5 @@
 import os
-import configparser
+import ConfigParser
 from starflow import utils
 from starflow import static
 from starflow import exception
@@ -14,7 +14,7 @@ class ConfigObject(object):
     def __init__(self,fp):
         self._cfg_file = fp
         self._config = None
-
+        
         self.exception_class = exception.ConfigNotFound
 
 
@@ -22,9 +22,9 @@ class ConfigObject(object):
         try:
             opt = config.getboolean(section, option)
             return opt
-        except configparser.NoSectionError:
+        except ConfigParser.NoSectionError:
             pass
-        except configparser.NoOptionError:
+        except ConfigParser.NoOptionError:
             pass
         except ValueError:
             raise exception.ConfigError(
@@ -35,9 +35,9 @@ class ConfigObject(object):
         try:
             opt = config.getint(section, option)
             return opt
-        except configparser.NoSectionError:
+        except ConfigParser.NoSectionError:
             pass
-        except configparser.NoOptionError:
+        except ConfigParser.NoOptionError:
             pass
         except ValueError:
             raise exception.ConfigError(
@@ -48,9 +48,9 @@ class ConfigObject(object):
         try:
             opt = config.get(section, option)
             return opt
-        except configparser.NoSectionError:
+        except ConfigParser.NoSectionError:
             pass
-        except configparser.NoOptionError:
+        except ConfigParser.NoOptionError:
             pass
 
     def _get_list(self, config, section, option):
@@ -65,12 +65,12 @@ class ConfigObject(object):
     def _get_urlfp(self, url):
         log.debug("Loading url: %s" % url)
         try:
-            fp = urllib.request.urlopen(url)
+            fp = urllib.urlopen(url)
             if fp.getcode() == 404:
                 raise exception.ConfigError("url %s does not exist" % url)
             fp.name = url
             return fp
-        except IOError as e:
+        except IOError, e:
             raise exception.ConfigError(
                 "error loading config from url %s\n%s" % (url, e))
 
@@ -83,7 +83,7 @@ class ConfigObject(object):
         else:
             raise self.exception_class(cfg_file,self)
         return open(cfg_file)
-
+        
     def __load_config(self):
         fp = self._cfg_file
         if utils.is_url(fp):
@@ -91,12 +91,12 @@ class ConfigObject(object):
         else:
             cfg = self._get_fp(fp)
         try:
-            cp = configparser.ConfigParser()
+            cp = ConfigParser.ConfigParser()
             cp.readfp(cfg)
             return cp
-        except configparser.MissingSectionHeaderError:
+        except ConfigParser.MissingSectionHeaderError:
             raise exception.ConfigHasNoSections(cfg.name)
-        except configparser.ParsingError as e:
+        except ConfigParser.ParsingError, e:
             raise exception.ConfigError(e)
 
     @property
@@ -114,16 +114,12 @@ class ConfigObject(object):
         if self._config is None:
             self._config = self.__load_config()
         return self._config
-
+        
 
     def _load_settings(self, section_name, settings, store):
         """
         Load section settings into a dictionary
         """
-
-        # print(self)
-        # print(self.config._sections)
-
         section = self.config._sections.get(section_name)
         if not section:
             raise exception.ConfigSectionMissing(
@@ -142,7 +138,7 @@ class ConfigObject(object):
                         (setting, section_name,
                          ', '.join([str(o) for o in options])))
                 section_conf[setting] = value
-
+                
     def _check_required(self, section_name, settings, store):
         """
         Check that all required settings were specified in the config.
@@ -162,7 +158,7 @@ class ConfigObject(object):
                 raise exception.ConfigError(
                     'missing required option %s in section "%s"' %
                     (setting, section_name))
-
+                
     def _load_defaults(self, settings, store):
         """
         Sets the default for each setting in settings regardless of whether
@@ -175,8 +171,8 @@ class ConfigObject(object):
                 if DEBUG_CONFIG:
                     log.debug('%s setting not specified. Defaulting to %s' % \
                               (setting, default))
-                section_conf[setting] = default
-
+                section_conf[setting] = default                
+                
     def _load_section(self, section_name, section_settings):
         """
         Returns a dictionary containing all section_settings for a given
@@ -189,7 +185,7 @@ class ConfigObject(object):
         self._load_defaults(section_settings, store)
         self._check_required(section_name, section_settings, store)
         return store
-
+        
     def _get_section_name(self, section):
         """
         Returns section name minus prefix
@@ -237,7 +233,7 @@ class ConfigObject(object):
             name = self._get_section_name(sec)
             sections_store[name] = self._load_section(sec, section_settings)
         return sections_store
-
+        
 
 
 class StarFlowConfig(ConfigObject):
@@ -247,15 +243,15 @@ class StarFlowConfig(ConfigObject):
         self._registry_file = static.GLOBAL_REGISTRY_FILE
         self._config = None
         self.exception_class = exception.GlobalConfigNotFound
-
-    def load(self):
+    
+    def load(self):  
         store = self._load_section('global', static.GLOBAL_SETTINGS)
         self.python_executable = store["python_executable"]
         self.default_callmode = store["default_callmode"]
-        self.pythonpath = store["pythonpath"]
-
+        self.pythonpath = store["pythonpath"]    
+            
     def create_global_config(self):
-
+    
         cfg_file = self._cfg_file
         cfg_dir = self._cfg_dir
         if not os.path.exists(cfg_dir):
@@ -266,8 +262,8 @@ class StarFlowConfig(ConfigObject):
         cfg_fh.close()
         log.info("Global config file written to %s. Please customize this file." %
                  cfg_file)
-
-        import pickle as pickle
+        
+        import cPickle as pickle
         empty_registry = {}
         registry_file = self._registry_file
         registry_fh = open(registry_file,'w')
@@ -275,48 +271,48 @@ class StarFlowConfig(ConfigObject):
         registry_fh.close()
         log.info("Empty data environment registry written to %s. Please customize this file." %
                  registry_file)
-
-
+        
+        
         template_dir = static.GLOBAL_TEMPLATE_DIR
         os.makedirs(os.path.join(template_dir, static.LOCAL_CFG_DIR))
-
+        
         local_cfg_template_file = os.path.join(template_dir, static.LOCAL_CFG_FILE)
         local_cfg_template_fh = open(local_cfg_template_file, 'w')
         local_cfg_template_fh.write(templates.LOCAL_CONFIG)
         local_cfg_template_fh.close()
-        log.info(TEMPLATE_WRITTEN_MESSAGE %
+        log.info(TEMPLATE_WRITTEN_MESSAGE % 
                                      ("local config", local_cfg_template_file))
-
-        local_lmf_template_file = os.path.join(template_dir,
+                 
+        local_lmf_template_file = os.path.join(template_dir, 
                                                static.LOCAL_LIVE_MODULE_FILTER_FILE)
         local_lmf_template_fh = open(local_lmf_template_file, 'w')
         local_lmf_template_fh.write(templates.LOCAL_LIVE_MODULE_FILTER_TEXT)
         local_lmf_template_fh.close()
-        log.info(TEMPLATE_WRITTEN_MESSAGE %
-                              ("live module filters", local_lmf_template_file))
-
+        log.info(TEMPLATE_WRITTEN_MESSAGE % 
+                              ("live module filters", local_lmf_template_file))        
+                 
         local_setup_template_file = os.path.join(template_dir, static.LOCAL_SETUP_FILE)
         local_setup_template_fh = open(local_setup_template_file, 'w')
         local_setup_template_fh.write(templates.LOCAL_SETUP_TEXT)
         local_setup_template_fh.close()
-        log.info(TEMPLATE_WRITTEN_MESSAGE %
-                              ("local setup.py file",local_setup_template_file))
-
+        log.info(TEMPLATE_WRITTEN_MESSAGE % 
+                              ("local setup.py file",local_setup_template_file))    
+                 
     def display_config(self):
         import starflow.templates as templates
         return templates.copy_paste(templates.GLOBAL_CONFIG)
-
+        
     def __repr__(self):
-        return "<StarFlowConfig: %s>" % self._cfg_file
+        return "<StarFlowConfig: %s>" % self._cfg_file           
 
 TEMPLATE_WRITTEN_MESSAGE = \
 """Template for %s to:
             %s.
-    Please customize this file."""
+    Please customize this file."""                
 
 class DataEnvironmentConfig(ConfigObject):
 
-    def __init__(self,path = None):
+    def __init__(self,path = None):  
         self._root_dir = self._find_de_root(path)
         self._cfg_dir = os.path.join(self._root_dir, static.LOCAL_CFG_DIR)
         self._cfg_file = os.path.join(self._root_dir, static.LOCAL_CFG_FILE)
@@ -327,17 +323,14 @@ class DataEnvironmentConfig(ConfigObject):
         self._tmp_dir = os.path.join(self._root_dir, static.LOCAL_TMP_DIR)
         self._temp_dir = os.path.join(self._root_dir, static.LOCAL_TEMP_DIR)
         self._lmf_file = os.path.join(self._root_dir, static.LOCAL_LIVE_MODULE_FILTER_FILE)
-        self._local_setup_file = os.path.join(self._root_dir, static.LOCAL_SETUP_FILE)
-        self._config = None
+        self._local_setup_file = os.path.join(self._root_dir, static.LOCAL_SETUP_FILE)    
+        self._config = None 
         self.exception_class = exception.LocalConfigNotFound
 
-    ##########loading
+    ##########loading 
 
     def load_live_module_filters(self):
-        #print(self)
-        #FilterPath = self._lmf_file
-        FilterPath = "/config/configure_live_module_filters.txt"
-        #print(FilterPath)
+        FilterPath = self._lmf_file
         F = [ll for ll in open(FilterPath,'rU').read().strip('\n').split('\n') if not ll.startswith('#')]
         for i in range(len(F)):
             l = [ll.strip(' ') for ll in F[i].split(':')]
@@ -347,34 +340,33 @@ class DataEnvironmentConfig(ConfigObject):
             #l[0] = os.path.join(self._root_dir,l[0][3:])
             F[i] = l
         live_module_filters = dict(F)
-        self.live_module_filters = live_module_filters
-
+        self.live_module_filters = live_module_filters     
+           
     def load(self):
         """
         Populate this config object from the StarFlow config files
         """
         log.debug('Loading config')
-
+        
         store = self._load_section('local_systemwide', {})
         self.name = store['name']
         self.system_mode = store['system_mode']
         self.protection = store['protection']
         self.gmail_account_name = store["gmail_account_name"]
         self.gmail_account_passwd = store["gmail_account_passwd"]
-        #print(self._root_dir)
         self._generated_code_dir = os.path.join(self._root_dir,store["generated_code_dir"])
         self.load_live_module_filters()
-
+         
         return self
-
-
+        
+              
     def reload(self):
         """
         Reloads the configuration file
         """
 
-
-
+  
+  
     ##########other utils
     def _getpwd(self, path):
         """Get parent working directory"""
@@ -397,19 +389,19 @@ class DataEnvironmentConfig(ConfigObject):
     def _find_de_root(self,path):
         if not path:
             path = os.getcwd()
-            # print(path)
-
         else:
             st = os.stat(path)
         self._path = path
 
-        # print(static.LOCAL_CFG_DIR)
         for d in self._get_parent_dirs(path):
-            # print(d)
-            # print(os.path.join(d, static.LOCAL_CFG_DIR))
             if os.path.exists(os.path.join(d, static.LOCAL_CFG_DIR)):
                 return d
         raise exception.DataEnvironmentNotFound("Not a StarFlow data environment")
-
+         
     def __repr__(self):
-        return "<DataEnvironmentConfig: %s>" % self._cfg_file
+        return "<DataEnvironmentConfig: %s>" % self._cfg_file           
+
+        
+        
+
+  

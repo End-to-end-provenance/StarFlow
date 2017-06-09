@@ -1,14 +1,14 @@
 import optparse
 import os
 import shutil
-import pickle as pickle
+import cPickle as pickle
 
 from starflow import utils
 from starflow.logger import log
 from starflow import static
 from starflow import de
 
-from .base import CmdBase
+from base import CmdBase
 
 class CmdInit(CmdBase):
     """
@@ -31,7 +31,7 @@ class CmdInit(CmdBase):
                 cfg = config.StarFlowConfig()
                 cfg.load()
                 return optcomplete.ListCompleter(cfg.get_cluster_names())
-            except Exception as e:
+            except Exception, e:
                 log.error('something went wrong fix me: %s' % e)
 
     def addopts(self, parser):

@@ -1,4 +1,4 @@
-import BeautifulSoup
+from bs4 import BeautifulSoup
 import re
 SGE_STATUS_INTERVAL = 5
 SGE_EXIT_STATUS_PATTERN = re.compile('exit_status[\s]*([\d])')
@@ -12,9 +12,9 @@ def wait_and_get_statuses(joblist):
     f = tempfile.NamedTemporaryFile(delete=False)
     name = f.name
     f.close()
-    
+
     jobset =  set(joblist)
-    
+
     statuses = []
     while True:
         os.system('qstat -xml > ' + name)
@@ -24,14 +24,14 @@ def wait_and_get_statuses(joblist):
             time.sleep(SGE_STATUS_INTERVAL)
         else:
             break
-    
-    
+
+
     for job in jobset:
         e = os.system('qacct -j ' + job + ' > ' + name)
         if e != 0:
             time.sleep(20)
         os.system('qacct -j ' + job + ' > ' + name)
-        s = open(name).read()      
+        s = open(name).read()
         try:
             res = SGE_EXIT_STATUS_PATTERN.search(s)
             child_exitStatus = int(res.groups()[0])
@@ -40,6 +40,6 @@ def wait_and_get_statuses(joblist):
             raise exception.QacctParsingError(job,name)
         else:
             pass
-    
+
     os.remove(name)
     return statuses

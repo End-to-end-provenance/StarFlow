@@ -65,9 +65,8 @@ class BadCheckError:
     '''
         Error class used for raising I/O errors (maybe should be moved to system_io_override?)
     '''
-    def __init__(self, iofunc, readfiles, writefiles, Dependencies, Creates):
-        print("CHECK_ERROR: An I/O exception occured in function " + str(iofunc) + " : either the files " + str(readfiles) + " aren't in " +str(Dependencies) + " or the files " + str(writefiles) + " aren't in " + str(Creates) + '.\n')
-
+    def __init__(self,iofunc,readfiles,writefiles, Dependencies,Creates):
+        print(("CHECK_ERROR: An I/O exception occured in function " + str(iofunc) + " : either the files " + str(readfiles) + " aren't in " +str(Dependencies) + " or the files " + str(writefiles) + " aren't in " + str(Creates) + '.\n'))
 
 def RecursiveFileList(ToList,Avoid=None):
     '''
@@ -276,7 +275,7 @@ def GetDataEnvironmentDirectory():
     if 'DataEnvironmentDirectory' in list(x.keys()):
         return x['DataEnvironmentDirectory']
     else:
-        print('DataEnvironmentDirectory not an environment variable, assuming it is ' , os.getcwd()[:os.getcwd().find('/')] + '/')
+        print(('DataEnvironmentDirectory not an environment variable, assuming it is ' + str(os.getcwd()[:os.getcwd().find('/')]) + '/'))
         return os.getcwd()[:os.getcwd().find('/')] + '/'
 
 def PathAlong(a,b):
@@ -1002,7 +1001,7 @@ def Backslash(Dir,Verbose=False):
 
     if Dir[-1] != '/':
         if Verbose:
-            print("Warning: the directory name, ", Dir, ", was provided. The character '/' was appended to the end of the name.")
+            print(("Warning: the directory name, " + str(Dir) + ", was provided. The character '/' was appended to the end of the name."))
         return Dir + '/'
     else:
         return Dir

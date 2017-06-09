@@ -1,14 +1,14 @@
 import optparse
 import os
 import shutil
-import cPickle as pickle
+import pickle as pickle
 
 from starflow import utils
 from starflow.logger import log
 from starflow import static
 from starflow import de
 
-from base import CmdBase
+from .base import CmdBase
 
 class CmdMakeDE(CmdBase):
     """
@@ -33,7 +33,7 @@ class CmdMakeDE(CmdBase):
                 cfg = config.StarFlowConfig()
                 cfg.load()
                 return optcomplete.ListCompleter(cfg.get_cluster_names())
-            except Exception, e:
+            except Exception as e:
                 log.error('something went wrong fix me: %s' % e)
 
     def cancel_command(self, signum, frame):

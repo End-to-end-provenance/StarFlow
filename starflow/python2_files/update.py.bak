@@ -103,7 +103,7 @@ import inspect
 import re
 import subprocess
 import traceback
-import pickle as pickle
+import cPickle as pickle
 
 import numpy
 
@@ -267,9 +267,9 @@ def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple =
     '''
     ScriptsToCall = WhatWillUpdate(Seed, AU = AU, Exceptions=Exceptions, Simple=Simple, Forced=Forced, Pruning=Pruning,ProtectComputed=ProtectComputed)
     if len(Union(ScriptsToCall)) > 0:
-        print('\nThe system would call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall))
+        print '\nThe system would call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall)
     else:
-        print('\nNothing would be called.')
+        print '\nNothing would be called.'
 
 def WhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
     if isinstance(Seed,str):
@@ -339,8 +339,8 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
     
         [SsID,SsName,SsTemp,SsRTStore,TempStdOut] = SetupRun()
         sys.stdout = multicaster(TempStdOut,sys.__stdout__,New=True)
-        print('\nThe system is planning to call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall))
-        print('Output during the run will be stored in', SsTemp)
+        print '\nThe system is planning to call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall)
+        print 'Output during the run will be stored in', SsTemp
         RemainingLinkList = numpy.rec.fromrecords(uniqify(ListUnion([l.tolist() for l in ActivatedLinkListSequence])), names = ActivatedLinkListSequence[0].dtype.names)   
         RemoveScriptsToBeCreated(RemainingLinkList,ScriptsToCall)
         [CreateDict,IsFastDict] = GetCreatesAndIsFast(RemainingLinkList)
@@ -354,7 +354,7 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
         for J in ScriptsToCall:  #for each "round" of scripts to call,  
     
             if len(J) > 0:
-                print('Calling round', Round, '... ')
+                print 'Calling round', Round, '... '
                 ToRemove = []  
                 NoDiff = {}
                 ResourceUsageDict = {}
@@ -385,11 +385,11 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
                         jt.outputPath = ':' + TempSOIS
                         jt.jobName = j
                         jobids[j] = Session.runJob(jt)
-                        print('Loading job', j , 'with job id', jobids[j])
+                        print 'Loading job', j , 'with job id', jobids[j]
                         
-                    for j in list(jobids.keys()):
+                    for j in jobids.keys():
                         retval = Session.wait(jobids[j],drmaa.Session.TIMEOUT_WAIT_FOREVER)
-                        print('Job', j, 'returned.')
+                        print 'Job', j, 'returned.'
                         ResourceUsageDict[j] = retval.resourceUsage 
                 
                         HandleChildJobs(j,SsTemp,EmailWhenDone,SsName,SsRTStore,IsFastDict[j],CallMode)
@@ -406,7 +406,7 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
                     if PathExists(TempMetaFile):
                         MetaData = pickle.load(open(TempMetaFile,'r'))
                         NewlyCreatedScripts.update(MetaData['NCS'])
-                        NoDiff.update(dict([(f,MetaData['OriginalTimes'][f]) for f in list(MetaData['IsDifferent'].keys()) if not MetaData['IsDifferent'][f]]))
+                        NoDiff.update(dict([(f,MetaData['OriginalTimes'][f]) for f in MetaData['IsDifferent'].keys() if not MetaData['IsDifferent'][f]]))
                         if MetaData['ExitType'] == 'Failure':
                             ToRemove.append(j)
 
@@ -417,7 +417,7 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
                 Round += 1
         
         if len(NewlyCreatedScripts) > 0:
-            print('\n\nDuring the update just completed, the following python operation files were either created newly or overwritten:\n\n', NewlyCreatedScripts, '\n\nThe system will now perform an update on these scripts.\n\n')
+            print '\n\nDuring the update just completed, the following python operation files were either created newly or overwritten:\n\n', NewlyCreatedScripts, '\n\nThe system will now perform an update on these scripts.\n\n'
 
             LinkUpdate(list(NewlyCreatedScripts) + Seed, AU = AU, Exceptions = Exceptions,Simple=Simple,Pruning=Pruning,Forced=Forced,ProtectComputed = ProtectComputed,EmailWhenDone = EmailWhenDone,CallMode=CallMode)
     
@@ -428,7 +428,7 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
         ReleaseSessionID(SsID)
 
     else:
-        print("No scripts to be called.")
+        print "No scripts to be called."
         
     sys.stdout = sys.__stdout__
 
@@ -451,7 +451,7 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
         MoveToTemp(Creates,IsFast,SsRTStore)        
                         
     if j not in TouchList:
-        print('\n\nCalling ' , j, ', which makes ',  ','.join(Creates) , '...\n')
+        print '\n\nCalling ' , j, ', which makes ',  ','.join(Creates) , '...\n'
         Before = time.time()
         ExitStatus = os.system(PATH_TO_PYTHON + " -c " + Command)
         After = time.time()
@@ -468,7 +468,7 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
         RunOutput = None
         Before = time.time()
         After = Before
-        print('Just Touching outputs of', j, ':', Creates)
+        print 'Just Touching outputs of', j, ':', Creates
         FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,OrigDirInfo,TempSOIS,TempMetaFile,CallMode,EmailWhenDone,SsName,SsRTStore,IsFast)
 
 
@@ -479,7 +479,7 @@ def HandleChildJobs(j,SsTemp,EmailWhenDone,SsName,SsRTStore,IsFast,CallMode):
         child_jobs = MetaData.get('child_jobs')
         
         if child_jobs:
-            print(('... but found child jobs', child_jobs, 'so now waiting for those...'))
+            print('... but found child jobs', child_jobs, 'so now waiting for those...')
             ExitStatus = MetaData['ExitStatus']
             
             statuses = wait_and_get_statuses(child_jobs)
@@ -530,7 +530,7 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
                 os.utime(f,(FindAtime(f),max(FindMtime(f),Before)))  
             NewlyCreatedScripts.update(set(ListUnion([[path for path in RecursiveFileList(f) if path.split('.')[-1] == 'py'] for f in Creates])))
             CheckDiffs(j,Creates,SsRTStore,IsFast,RunOutput,IsDifferent,Targets)
-            for g in list(OrigDirInfo.keys()):
+            for g in OrigDirInfo.keys():
                 if listdir(g) == OrigDirInfo[g][1]:
                     os.utime(g,(FindAtime(g),OrigDirInfo[g][0]))        
         
@@ -543,7 +543,7 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
     pickle.dump(TempMetaData,F) 
     F.close()
     
-    print(("FINISH UP",TempMetaFile,TempMetaData))
+    print("FINISH UP",TempMetaFile,TempMetaData)
     
     if CallMode == 'DRMAA':
         EmailResults(EmailWhenDone,'Call to ' + j + ', run ' + SsName ,TempSOIS)
@@ -578,10 +578,10 @@ def CheckDiffs(j,Creates,SsRTStore,IsFast,RunOutput,IsDifferent,Targets):
                 Differences = os.popen('diff -rq ' + temp_path + ' ' + t,'r').read()
                 IsDifferent[t] = len(Differences) > 0
                 if not IsDifferent[t]: 
-                    print('No differences were detected between the newly created version of', t, 'and the most recent previous version.') 
+                    print 'No differences were detected between the newly created version of', t, 'and the most recent previous version.' 
                 
-            elif IsFast and isinstance(RunOutput,dict) and 'Diffs' in list(RunOutput.keys()) and t in list(RunOutput['Diffs'].keys()) and RunOutput['Diffs'][t] == ():      
-                print('The fast algorithm', j , 'reported no differences between the newly created version of', t, 'and the most recent previous version.') 
+            elif IsFast and isinstance(RunOutput,dict) and 'Diffs' in RunOutput.keys() and t in RunOutput['Diffs'].keys() and RunOutput['Diffs'][t] == ():      
+                print 'The fast algorithm', j , 'reported no differences between the newly created version of', t, 'and the most recent previous version.' 
             elif PathExists(t):
                 IsDifferent[t] = True
         
@@ -598,9 +598,9 @@ def RevertToOldFiles(Creates,SsRTStore,IsFast,OriginalDirInfo):
         for f in Creates:
             temp_name = redirect(f,SsRTStore)
             if PathExists(temp_name):
-                print('Reverting to most recent previous versions of', f)
+                print 'Reverting to most recent previous versions of', f
                 os.rename(temp_name,f)
-        for g in list(OriginalDirInfo.keys()):
+        for g in OriginalDirInfo.keys():
             os.utime(g,(FindAtime(g),OriginalDirInfo[g][0]))    
 
 def MoveOutGarbage(Creates,SsRTStore,creates = WORKING_DE.relative_root_dir):
@@ -608,16 +608,16 @@ def MoveOutGarbage(Creates,SsRTStore,creates = WORKING_DE.relative_root_dir):
         if PathExists(f):
             temp_name = redirect(f,SsRTStore) 
             garbagename = (temp_name[:-1] if temp_name[-1] == '/' else temp_name) +  '_Garbage_' + TimeStamp(time.time())
-            print('Moving partially created output to', garbagename)
+            print 'Moving partially created output to', garbagename
             os.rename(f,garbagename)
 
 def printsuccessmessage(op,Creates):
-    print('... appears to have successfully run', op, ', creating' , ','.join(Creates))
+    print '... appears to have successfully run', op, ', creating' , ','.join(Creates)
 
 def printfailuremessage(op,Creates,ExitStatus):
     UncreatedFiles = [f for f in Creates if not PathExists(f)]              
     FailureStatement = 'threw an exception during attempted execution (see above for details).' if ExitStatus != 0 else 'ran without throwing an exception, but for some reason the outputs ' + ', '.join(UncreatedFiles) + ' never got created.'
-    print(op , FailureStatement , 'System will consider this run a failure and (if possible) will revert to old versions of ' , ','.join(Creates) , '.  Downstream updates will be cancelled.')  
+    print op , FailureStatement , 'System will consider this run a failure and (if possible) will revert to old versions of ' , ','.join(Creates) , '.  Downstream updates will be cancelled.'  
 
     
 
@@ -697,7 +697,7 @@ def GetCreatesAndIsFast(RemainingLinkList):
     CreateDict = dict([(CreateLinks['UpdateScript'][changes[i]+1],uniqify(CreateLinks['LinkTarget'][changes[i]+1:changes[i+1]+1].tolist())) for i in range(len(changes)-1)])
     IsFastDict = dict([(CreateLinks['UpdateScript'][changes[i]+1],CreateLinks['IsFast'][changes[i]+1]) for i in range(len(changes)-1)]) 
     
-    for j in list(CreateDict.keys()):
+    for j in CreateDict.keys():
         CreateDict[j].sort()
     
     return [CreateDict,IsFastDict]
@@ -707,7 +707,7 @@ def MakeTouchList(RemainingLinkList,ScriptsToCall,TouchList,TotalNoDiff,NoDiff,S
 
     if len(NoDiff) > 0:     
         TotalNoDiff.update(NoDiff)
-        RemainingLinkList = RemainingLinkList[[i for i in range(len(RemainingLinkList)) if RemainingLinkList['LinkSource'][i] not in list(NoDiff.keys())]]    
+        RemainingLinkList = RemainingLinkList[[i for i in range(len(RemainingLinkList)) if RemainingLinkList['LinkSource'][i] not in NoDiff.keys()]]    
         R = RemainingLinkList[RemainingLinkList['LinkType'] != 'Dummy']
         RemainingLinkListSequence = [ll[ll['Activated']] for ll in PropagateThroughLinkGraphWithTimes(Seed,R, Simple=Simple,Pruning=Pruning,ProtectComputed = ProtectComputed)]     
         TouchList.update(Union(ScriptsToCall).difference(Union([set(l['UpdateScript']) for l in RemainingLinkListSequence])))
@@ -728,7 +728,7 @@ def RemoveDownstreamOfFailures(RemainingLinkList,ScriptsToCall,Round,ToRemove,Se
             for kk in ScriptsToRemove:
                 if kk in JJ:
                     JJ.remove(kk)
-                    print('Removing call to script', kk, 'due to failure of at least one of the scripts:', ToRemove) 
+                    print 'Removing call to script', kk, 'due to failure of at least one of the scripts:', ToRemove 
                     
     return RemainingLinkList
     
@@ -746,7 +746,7 @@ def EmailResults(EmailWhenDone,SsName,FileName):
         try:
             Gmail(account,password,EmailList,subject = WORKING_DE.name + ' Run ID#: ' + SsName, FileName=FileName)
         except:
-            print('No email sent.')
+            print 'No email sent.'
             traceback.print_exc()
             
 
@@ -754,12 +754,12 @@ def RemoveScriptsToBeCreated(TotalLinkList,ScriptsToCall):
     TotalLinkList.sort(order=['UpdateScriptFile'])
     T = TotalLinkList.copy();   T = T[T['LinkType'] == 'CreatedBy'];  T.sort(order=['TargetFile'])
     [A,B] = getpathalong(T['TargetFile'],TotalLinkList['UpdateScriptFile'])
-    BadLines = ListUnion([list(range(A[i],B[i])) for i in range(len(A))])
+    BadLines = ListUnion([range(A[i],B[i]) for i in range(len(A))])
     BadSeedScripts = list(set(TotalLinkList[BadLines]['UpdateScript']).difference(['None']))                        
     if len(BadSeedScripts) > 0:
         P = PropagateThroughLinkGraph(BadSeedScripts,TotalLinkList)
         BadScripts = list(set(ListUnion([l['UpdateScript'] for l in P])).difference(['None']))
-        print('Calls to the following scripts will be cancelled because they are automatically generated python .py files and they\'re about to be overwritten:\n', BadScripts, '\n') 
+        print 'Calls to the following scripts will be cancelled because they are automatically generated python .py files and they\'re about to be overwritten:\n', BadScripts, '\n' 
         for JJ in ScriptsToCall:
             for kk in BadScripts:
                 if kk in JJ:

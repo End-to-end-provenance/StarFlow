@@ -58,22 +58,22 @@ class ConfigNotFound(ConfigError):
  
 class GlobalConfigNotFound(ConfigNotFound):
     def display_options(self):
-        print('Options:')
-        print('--------') 
-        print('[1] Show the starflow global config template')
-        print('[2] Write config template to %s' % self.cfg_file)
-        print('[q] Quit')
-        resp = input('\nPlase enter your selection: ')
+        print 'Options:'
+        print '--------' 
+        print '[1] Show the starflow global config template'
+        print '[2] Write config template to %s' % self.cfg_file
+        print '[q] Quit'
+        resp = raw_input('\nPlase enter your selection: ')
         if resp == '1':
-            print(self.config_object.display_config())
+            print self.config_object.display_config()
         elif resp == '2':
             self.config_object.create_global_config()
             
 class LocalConfigNotFound(ConfigNotFound):
     def display_options(self):
-        print('Options:')
-        print('--------') 
-        print('What to do now?')
+        print 'Options:'
+        print '--------' 
+        print 'What to do now?'
 
 class DataEnvironmentNotFound(BaseException):
     pass
@@ -129,7 +129,7 @@ class RegistrationMismatchError(RegistryError):
         
         self.attrdict = attrdict
         
-        s = '\n'.join([attr + ': ' + val[0] + ' (local) vs. ' + val[1] + ' (registry).' for (attr,val) in list(self.attrdict.items())])
+        s = '\n'.join([attr + ': ' + val[0] + ' (local) vs. ' + val[1] + ' (registry).' for (attr,val) in self.attrdict.items()])
         
         self.msg = "The following attributes to do not match between the registry and the local config file:\n" + s
 

@@ -14,7 +14,7 @@ __environment = os.environ
 __environment['SystemMode'] = 'Exploratory'
 __environment['PROTECTION'] = 'ON'
 # SET PATH FOR DATA DIRECTORY
-__environment['DataEnvironmentDirectory'] = '/Users/jen/Desktop/NewDataEnvironment/'
+__environment['DataEnvironmentDirectory'] = '/Users/jen/Desktop/MyDE/'
 __environment['AutomaticUpdatesPath'] = '/config/configure_automatic_updates.txt'
 __environment['LiveModuleFilterPath'] = '/config/configure_live_module_filters.txt'
 __environment['DotPathToLiveModuleFilterFunction'] = 'config.SetupFunctions.GetLiveModules'
@@ -25,7 +25,8 @@ sys.path.insert(0,__environment['DataEnvironmentDirectory'])
 
 #Intercept the python file i/o operations and replace them with the checked versions as described in ../System/system_io_override.py
 if 'OVERWRITEFLAG' not in dir():
-	#CHANGE PATHS TO LOCAL LOCATION OF STARFLOW INSTALLATION
+	#change these 2 paths to:  /path/to/starflow/on/your/machine/system_io_override.py
+	# this is usually in a site-packages folder of your version of python
 	exec(compile(open('/Users/jen/miniconda3/envs/python3.4/lib/python3.4/site-packages/StarFlow-0.9999-py3.4.egg/starflow/system_io_override.py').read(), '/Users/jen/miniconda3/envs/python3.4/lib/python3.4/site-packages/StarFlow-0.9999-py3.4.egg/starflow/system_io_override.py', 'exec'))
 	OVERWRITEFLAG = 1
 #NOTE: In some interactive python interpreters, e.g. IPython, running the system i/o override more than once in an single interpreter session causes problems.   The #OVERWRITEFLAG seen above is used to determine whether the override has been run; if not (e.g. when the OVERWRITEFLAG is NOT present as a variable) the override can be run; otherwise, not.

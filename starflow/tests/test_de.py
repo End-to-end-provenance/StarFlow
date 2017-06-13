@@ -14,7 +14,7 @@ class TestDE(StarFlowTest):
         de.create()
         assert de.is_data_environ()
         assert de.path == myde
-        assert os.path.exists(os.path.join(myde,static.STARFLOW_CFG_DIR)) 
+        assert os.path.exists(os.path.join(myde,static.STARFLOW_CFG_DIR))
 
 if __name__ == "__main__":
     import nose

@@ -288,6 +288,12 @@ def GutsComputeLinks(FileList):
 
     for opfile in FileList:  #<-- for each op in the list of operations,
         StoredModule = GetStoredModule(opfile)  #<-- get stored version of information about the module -- GetStoredModules is defined in ../System/MetaData.py, see that for information.
+        print(type(StoredModule))
+
+        for entry in StoredModule:
+            print(entry)
+            print(StoredModule[entry])
+
         if StoredModule:   #<-- if stored version f information is sucessfully obtained,  go ahead
             SucceededList += [opfile]
             ModuleName = '.'.join(opfile.split('/')[1:-1] + [inspect.getmodulename(opfile)])    #get name of module from file name, assuming it's in the system standard convention formation, starting with '../' relative to Temp directory

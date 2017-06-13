@@ -4,7 +4,6 @@ Static analysis routines.
 
 '''
 
-#import compiler, inspect
 import inspect
 from starflow.utils import *
 

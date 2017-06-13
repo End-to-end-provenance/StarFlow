@@ -28,9 +28,16 @@ There are three main kinds of associated things:
 '''
 
 import sys
-sys.path.remove('/Users/jen/miniconda3/envs/python3.4/lib/python3.4/site-packages/tabular-0.1-py3.4.egg')
+
+try:
+    #remove any existing versions of tabular
+    sys.path.remove('/Users/jen/miniconda3/envs/python3.4/lib/python3.4/site-packages/tabular-0.1-py3.4.egg')
+except:
+    print("removed")
+
+# use the python3 updated version in tabular that exists in the cloned directory of StarFlow
+# change []/Users/jen/Desktop] to [your/path/to]StarFlow.
 sys.path.append("/Users/jen/Desktop/StarFlow/")
-# print(sys.path)
 
 import marshal
 import os
@@ -40,7 +47,7 @@ import traceback
 import tabular as tb
 import pickle as pickle
 
-# print(tb.__file__)
+print(tb.__file__)
 
 from starflow.utils import *
 from starflow.storage import StoredDocstring

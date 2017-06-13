@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 from starflow.config import StarFlowConfig
-from starflow.templates.config import config_template
+import starflow.templates
 
 class StarFlowTest(unittest.TestCase):
     pass

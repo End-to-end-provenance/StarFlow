@@ -8,13 +8,11 @@ from starflow.utils import AttributeDict
 
 DEBUG_CONFIG = False
 
-
 class ConfigObject(object):
 
     def __init__(self,fp):
         self._cfg_file = fp
         self._config = None
-
         self.exception_class = exception.ConfigNotFound
 
 
@@ -120,9 +118,6 @@ class ConfigObject(object):
         """
         Load section settings into a dictionary
         """
-
-        # print(self)
-        # print(self.config._sections)
 
         section = self.config._sections.get(section_name)
         if not section:
@@ -334,9 +329,8 @@ class DataEnvironmentConfig(ConfigObject):
     ##########loading
 
     def load_live_module_filters(self):
-        #print(self)
-        #FilterPath = self._lmf_file
-        FilterPath = "/config/configure_live_module_filters.txt"
+
+        FilterPath = "/Users/jen/Desktop/StarFlow/docs/Samples/config/configure_live_module_filters.txt"
         #print(FilterPath)
         F = [ll for ll in open(FilterPath,'rU').read().strip('\n').split('\n') if not ll.startswith('#')]
         for i in range(len(F)):
@@ -398,15 +392,12 @@ class DataEnvironmentConfig(ConfigObject):
         if not path:
             path = os.getcwd()
             # print(path)
-
         else:
             st = os.stat(path)
-        self._path = path
+        return path
 
         # print(static.LOCAL_CFG_DIR)
         for d in self._get_parent_dirs(path):
-            # print(d)
-            # print(os.path.join(d, static.LOCAL_CFG_DIR))
             if os.path.exists(os.path.join(d, static.LOCAL_CFG_DIR)):
                 return d
         raise exception.DataEnvironmentNotFound("Not a StarFlow data environment")

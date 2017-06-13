@@ -16,7 +16,7 @@ class CmdInit(CmdBase):
 
     Initialize a StarFlow Data Environment
 
-    Example: 
+    Example:
 
         $ starflow init MyNewDataEnvironment /home/users/me/dataenvironment
     """
@@ -41,22 +41,20 @@ class CmdInit(CmdBase):
     def cancel_command(self, signum, frame):
         raise exception.CancelledInitRequest(self.tag)
 
-    
+
     def execute(self, args):
         log.info("Initializing data environment ...")
         argdict = {}
-                  
-        argdict["root_dir"] = args[0]          
+
+        argdict["root_dir"] = args[0]
         argdict["name"] = args[1]
-       
-             
+
         if len(args) > 2:
             argdict["gmail_account_name"] = args[2]
             argdict["gmail_account_passwd"] = args[3]
-                                 
+
         argdict["local_name"] = self.opts.local_name if self.opts.local_name else argdict["name"]
-                
+
         de_manager = de.DataEnvironmentManager()
 
         de_manager.init_de(**argdict)
-  

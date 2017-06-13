@@ -4,7 +4,7 @@ Manager for StarFlow data environments
 """
 import os
 import sys
-import pickle as pickle
+import pickle
 import traceback
 
 from starflow.config import DataEnvironmentConfig, StarFlowConfig
@@ -14,6 +14,8 @@ from starflow import static
 from starflow import exception
 from starflow.logger import log
 import imp
+
+from shutil import copy
 
 class DataEnvironmentManager(StarFlowConfig):
 
@@ -27,67 +29,20 @@ class DataEnvironmentManager(StarFlowConfig):
         self.load_registry()
 
     def load_registry(self):
-        # print("static.GLOBAL_REGISTRY_FILE")
-        # print(static.GLOBAL_REGISTRY_FILE)
-        # print(type(static.GLOBAL_REGISTRY_FILE))
 
         # original
-        # registry = pickle.load(open(static.GLOBAL_REGISTRY_FILE))
+        # registry = pickle.load(open(static.GLOBAL_REGISTRY_FILE, 'rb'))
 
-        #try 1: 'rb' and encoding
-        # f = open(static.GLOBAL_REGISTRY_FILE, 'rb')
-        # print(f) #iotextwrapper name = registry path mode = r encoding = utf8
-        # print(type(f)) #textioWrapper
-        #
-        # #f.seek(0)
-        # registry = pickle.load(f, encoding = 'latin1')
-        # print(type(registry))
-
-        #try 2: pickling .registry first
-        # with open('.registry', 'wb') as fout:
-        #     pickle.dump(static.GLOBAL_REGISTRY_FILE, fout)
-        #
-        # with open('.registry', 'rb') as fin:
-        #     registry = pickle.load(fin)
-        #
-        # print(registry)
-        # print(type(registry)) # str object has no attribute values when passed to validate registry
-
-        #try 2.1: use file content instead of filename string
-
-        temp_dict1 = {"local_name": "0.1"}
-        reg_dict = {"version": temp_dict1}
-        # temp_dict = {"service": "registry"}
-        # t_dict = {"fields": temp_dict}
-        # reg_dict["log"] = t_dict
-
-        # if pickling eliminated:
-        # names = [v["local_name"] for v in list(registry.values())]
-        # TypeError: string indices must be integers
-
-        with open('.registry', 'wb') as fout:
-            pickle.dump(reg_dict, fout)
-
-        with open('.registry', 'rb') as fin:
-            registry = pickle.load(fin)
-
-        #with pickling:
-        # names = [v["local_name"] for v in list(registry.values())]
-        # KeyError: 'local_name'
-
-        # print(registry)
-        # print(type(registry)) #dict
+        try:
+            f = open(static.GLOBAL_REGISTRY_FILE, 'rb')
+            registry = pickle.load(f)
+        except EOFError:
+            registry = {}
 
         self.validate_registry(registry)
         self.registry = registry
 
     def validate_registry(self,registry):
-        # print("validate registry")
-        # print(registry.values())
-        # print(list(registry.values()))
-        # for v in list(registry.values()):
-        #     print(v)
-
         #original
         names = [v["local_name"] for v in list(registry.values())]
         if not is_unique(names):
@@ -133,13 +88,12 @@ class DataEnvironmentManager(StarFlowConfig):
 
 
     def clean_registry(self,path=None,local_name=None,strong=False,force=False):
-
         if path is None and local_name is None:
             infolist = [{"path":p} for p in self.registry]
         else:
             infolist = [{"path":path,"local_name":local_name}]
 
-
+        #info = dict
         for info in infolist:
             reg_info = self.get_registry_info(**info)
 
@@ -177,9 +131,10 @@ class DataEnvironmentManager(StarFlowConfig):
         return data_environment
 
     def verify(self,path,raise_error=True):
-
         try:
             data_environment = DataEnvironment(path = path)
+            #added this return statement
+            return data_environment
         except (exception.ConfigError,exception.DataEnvironmentNotFound) as e:
             error = exception.ValidationError(path,e)
             if raise_error:
@@ -232,20 +187,27 @@ class DataEnvironmentManager(StarFlowConfig):
 
 
     def make_de(self,path,cfg_dict):
+    # def make_de(self, argdict):
         if os.path.exists(path):
             raise exception.PathAlreadyExistsError(path)
+
+        # must have new name to get here. remember to erase it!
+
         os.makedirs(path)
-        copy_contents(static.GLOBAL_TEMPLATE_DIR,path)
-        cfg_dir = os.path.join(path,static.LOCAL_CFG_DIR)
-        local_cfg_file = os.path.join(path,static.LOCAL_CFG_FILE)
+        os.chdir(path)
+        os.makedirs(static.LOCAL_CFG_DIR)
+        copy(static.GLOBAL_CFG_FILE,static.LOCAL_CFG_FILE)
+
+        local_cfg_file = static.LOCAL_CFG_FILE
         local_cfg = open(local_cfg_file,'r').read()
+
         local_cfg = local_cfg % cfg_dict
         new_local_cfg_fh = open(local_cfg_file,'w')
         new_local_cfg_fh.write(local_cfg)
         new_local_cfg_fh.close()
 
+        os.chdir("..")
         self.verify(path)
-
 
     def register(self,path,reg_info):
         log.info("Registering %s" %path)
@@ -261,17 +223,13 @@ class DataEnvironmentManager(StarFlowConfig):
         self.registry[path] = reg_info
         registry_fh = open(static.GLOBAL_REGISTRY_FILE,'wb')
 
-        # print("register")
-        # print(type(registry_fh))
-        # print(type(self.registry))
-
         pickle.dump(self.registry,registry_fh)
         registry_fh.close()
 
     def deregister(self,path):
         log.info("Deregistering %s" %path)
         self.registry.pop(path)
-        registry_fh = open(static.GLOBAL_REGISTRY_FILE,'w')
+        registry_fh = open(static.GLOBAL_REGISTRY_FILE,'wb')
         pickle.dump(self.registry,registry_fh)
         registry_fh.close()
 
@@ -319,12 +277,9 @@ class DataEnvironment(DataEnvironmentConfig):
 
     @property
     def session_id_file(self):
-        print("session_id_file")
-        print(type(self))
-        print(self)
+        # print("making session_id_file")
         self.tmp_dir()
-        print("returned to session_id_file")
-        return self._create_file(self._ssid_file)
+        return self._create_file(self._session_id_file)
 
     @property
     def generated_code_dir(self):
@@ -339,7 +294,6 @@ class DataEnvironment(DataEnvironmentConfig):
     def _create_file(self, path):
         if not os.path.exists(path):
             open(path,'a').close()
-        print(path)
         return path
 
     def _create_dir(self,path):
@@ -347,15 +301,13 @@ class DataEnvironment(DataEnvironmentConfig):
             os.makedirs(path)
         return path
 
-
     def load_live_modules(self,filters=None):
 
         if filters is None:
             self.load_live_module_filters()
             filters = self.live_module_filters
-
+            
         FilteredModuleFiles = []
-
 
         try:
             Module = __import__(static.LOCAL_SETUP_MODULE)
@@ -389,5 +341,9 @@ if __name__ == "__main__":
     print(WORKING_DE.metadata_dir)
     print(WORKING_DE.modules_dir)
     print(WORKING_DE.links_dir)
+    # WORKING_DE.session_id_file("session_id_file")
     # print(WORKING_DE.session_id_file)
-    print(WORKING_DE.generated_code_dir)
+    # print(WORKING_DE.generated_code_dir)
+
+    result = WORKING_DE.load_live_modules()
+    print(result)

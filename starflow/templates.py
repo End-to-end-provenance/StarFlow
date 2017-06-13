@@ -9,7 +9,7 @@ dictk = lambda d,k : dict([(key,val[k]) for (key,val) in d.items()])
 def copy_paste(templ):
     return DASHES + ' COPY BELOW THIS LINE ' + DASHES + '\n' + templ + '\n' + \
     DASHES + ' END COPY ' + DASHES + '\n'
-    
+
 GLOBAL_CONFIG = """
 ########################################
 ## StarFlow Global Configuration File ##
@@ -37,10 +37,10 @@ gmail_account_passwd=%(gmail_account_passwd)s
 LOCAL_SETUP_TEXT = static.LOCAL_SETUP_TEXT
 
 LOCAL_LIVE_MODULE_FILTER_TEXT = """
-#This is a configuration file for the system.  Each of the lines contains 
-#specially formatted expressions used to determine which directories the 
-#system searches to find python modules to analyze and include in the 
-#system updating.  See manual for more detailed information. 
+#This is a configuration file for the system.  Each of the lines contains
+#specially formatted expressions used to determine which directories the
+#system searches to find python modules to analyze and include in the
+#system updating.  See manual for more detailed information.
 #Lines beginning with a hash mark (like this one) will be ignored.
 %(lmf)s
 """ % {"lmf" : static.LOCAL_SETTINGS["live_module_filters"][2]}

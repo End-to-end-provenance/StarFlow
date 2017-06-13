@@ -260,9 +260,9 @@ def GetStoredModule(path,Force=False):
     name of the module parts, and the value at the key is the instance of the
     StoredModulePart class for that part.  (see below in StoredModulePart for details)
     '''
-
     UpdateModuleStorage(path,Force=Force)
     [StoredModulePath,StoredModuleTimesPath]  = GetStoredPathNames(path)
+    print(StoredModulePath)
     try:
         return pickle.load(open(StoredModulePath,'rb'))
     except:
@@ -447,7 +447,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
     the modification state of parts, if any modifications appear to have been made.
     '''
 
-
     if is_string_like(path):
         paths = path.split(',')
     else:
@@ -478,7 +477,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                             Remake = True
 
             if Force or Remake or  os.path.getmtime(path) > os.path.getmtime(StoredTimesPath):
-
                 if Remake:
                     StoredTimes = {}
                     StoredModule = {}
@@ -489,7 +487,13 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                         StoredTimes = {}
                         StoredModule = {}
 
-                ModuleName = '.'.join(path.split('/')[1:-1] + [ inspect.getmodulename(path) ])
+                #original
+                # ModuleName = '.'.join(path.split('/')[1:-1] + [ inspect.getmodulename(path) ])
+
+                #try 2
+                # script must be dir scripts inside my_env
+                import scripts
+                ModuleName = scripts.__name__
 
                 try:
                     AddInitsAbove(path)
@@ -527,16 +531,15 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                             print(ModuleName + '.' + p, 'appears to have been added.')
                             NewStoredTimes[p] = os.path.getmtime(path)
 
-                    F = open(StoredModulePath,'w')
+                    F = open(StoredModulePath,'wb')
                     pickle.dump(NewStoredModule,F)
                     F.close()
 
-                    NewStoredTimes['__hash__'] = hashlib.sha1(open(StoredModulePath,'r').read()).digest()
+                    NewStoredTimes['__hash__'] = hashlib.sha1(open(StoredModulePath,'rb').read()).digest()
 
-                    F = open(StoredTimesPath,'w')
+                    F = open(StoredTimesPath,'wb')
                     pickle.dump(NewStoredTimes,F)
                     F.close()
-
 
 
 class StoredModulePart():
@@ -707,5 +710,8 @@ def GetStoredPathNames(path):
         from path name of the module to be stored.
     '''
 
-    StoredPath = os.path.join(WORKING_DE.modules_dir, path.strip('../').replace('/','__') )
-    return [os.path.join(StoredPath ,'.ModuleStorage'), os.path.join(StoredPath,'.ModuleTimes')]
+    # StoredPath = os.path.join(WORKING_DE.modules_dir, path.strip('../').replace('/','__') )
+    StoredPath = WORKING_DE.modules_dir
+    result = [os.path.join(StoredPath ,'.ModuleStorage'), os.path.join(StoredPath,'.ModuleTimes')]
+    # print(result)
+    return result

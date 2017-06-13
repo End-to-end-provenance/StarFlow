@@ -4,5 +4,3 @@
 #../Users/DanYamins/
 #../Data/Dan_Data/RandomData/Words/Dictionary/
 #../Users/Elaine/
-# NEED TO ADD PATH TO NDE HERE
-../Users/jen/Desktop/NewDataEnvironment/

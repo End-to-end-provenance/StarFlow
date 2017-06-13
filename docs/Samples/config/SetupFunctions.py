@@ -1,10 +1,6 @@
 '''
 Contains functions I use for configuring the  Data Environment.
 '''
-#need this?
-#import sys
-# SET PATH TO LOCAL INSTALLATION OF TABULAR
-#sys.path.append("/StarFlow/tabular")
 
 from starflow import linkmanagement
 from starflow.utils import RecursiveFileList, CheckInOutFormulae, getpathalong, uniqify, ListUnion

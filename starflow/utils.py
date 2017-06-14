@@ -1121,25 +1121,25 @@ def AddInitsAbove(opfile):
 
     '''
     DirList = opfile.split('/')[:-1]
-    for ii in range(1,len(DirList)):
-        DirName = '/'.join(DirList[:ii+1]) + '/'
-        print(DirName)
+
+    inner_most_dir = DirList[-1]
+    
+    # for ii in range(1,len(DirList)):
+        # DirName = '/'.join(DirList[:ii+1]) + '/'
+        # print(DirName)
         # oldatime = os.path.getatime(DirName)
         # oldmtime = os.path.getmtime(DirName)
         # if '__init__.py' not in listdir(DirName):
         #     F = open(DirName + '__init__.py','w')
         #     F.close()
         # os.utime(DirName,(oldatime,oldmtime))
-        try:
-            oldatime = os.path.getatime(DirName)
-            oldmtime = os.path.getmtime(DirName)
-            if '__init__.py' not in listdir(DirName):
-                F = open(DirName + '__init__.py','w')
-                F.close()
-            os.utime(DirName,(oldatime,oldmtime))
-        except:
-            print("go to next DirName")
 
+    oldatime = os.path.getatime(inner_most_dir)
+    oldmtime = os.path.getmtime(inner_most_dir)
+    if '__init__.py' not in listdir(inner_most_dir):
+        F = open(DirName + '__init__.py','w')
+        F.close()
+    os.utime(inner_most_dir,(oldatime,oldmtime))
 
 class multicaster():
     '''

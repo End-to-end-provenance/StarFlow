@@ -287,6 +287,7 @@ def GutsComputeLinks(FileList):
     SucceededList = []
 
     for opfile in FileList:  #<-- for each op in the list of operations,
+        print(opfile)
         StoredModule = GetStoredModule(opfile)  #<-- get stored version of information about the module -- GetStoredModules is defined in ../System/MetaData.py, see that for information.
         print(type(StoredModule))
 
@@ -462,7 +463,9 @@ def GetLinksBelow(Seed, AU = None, Exceptions = None, Forced = False,
     if isinstance(Seed,str):
         Seed = Seed.split(',')
     LinkList = LinksFromOperations(WORKING_DE.load_live_modules(),AddDummies=True)
+    print("Output for LinksFromOps " + str(LinkList))
     LinkList = FilterForAutomaticUpdates(LinkList,AU=AU,Exceptions=Exceptions)
+    print("output for Filter " + str(LinkList))
 
     if not Forced:
         T = PropagateThroughLinkGraphWithTimes(Seed,LinkList,Simple=Simple, Pruning=Pruning,ProtectComputed = ProtectComputed)
@@ -973,3 +976,9 @@ def UpstreamLinks(Targets,depends_on = WORKING_DE.relative_root_dir):
 DefaultValueForAutomaticUpdates = ['^.*']
 #DefaultValueForLiveModuleFilters = {'../Operations/' :  ['../*']}
 DefaultValueForLiveModuleFilters = {'../' : ['../*']}
+
+def main():
+    LinksFromOperations(["/Users/jen/Desktop/PF/scripts/script.py"])
+
+if __name__ == "__main__":
+    main()

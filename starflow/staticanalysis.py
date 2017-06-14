@@ -6,7 +6,7 @@ Static analysis routines.
 
 import inspect
 from starflow.utils import *
-
+import ast
 
 def GetFullUses(FilePath):
 	'''
@@ -31,6 +31,8 @@ def GetFullUses(FilePath):
 	'''
 
 	ModuleName = FilePath.lstrip('../').rstrip('.py').replace('/','.')
+	print("Get full uses " +ModuleName)
+
 	try:
 		[F,M,N] = GetUses(FilePath=FilePath)
 	except:
@@ -117,7 +119,6 @@ def usechecking(Mentions,M,N,FilePath,ModuleName,Internals,key):
 
 	return [Externals,StarUses,MoreInternals]
 
-
 def GetUses(AST = None,FilePath=None):
 	'''
 	Gets information about the names referenced in a python module or AST
@@ -148,39 +149,56 @@ def GetUses(AST = None,FilePath=None):
 	if AST == None:
 		assert FilePath != None, 'FilePath or AST must be specified'
 		try:
-			AST = compiler.parseFile(FilePath)
+			AST_str = open(FilePath).read()
+			AST = ast.parse(AST_str)
 		except:
 			print(FilePath, 'failing to compile.')
 			return None
 		else:
 			pass
+
 	NameDefs = {}
 	NamesUsage = {}
 	ModuleUsage = {}
 	GetUsesFromAST(AST,NameDefs, ModuleUsage, NamesUsage,'__module__')
-	return [NamesUsage,ModuleUsage,NameDefs]
 
+	# print("NameDefs")
+	# for entry in NameDefs:
+	# 	print(entry)
+	# 	print(NameDefs[entry])
+	# print("ModuleUsage")
+	# for entry in ModuleUsage:
+	# 	print(entry)
+	# 	print(ModuleUsage[entry])
+	# print("NamesUsage")
+	# for entry in NamesUsage:
+	# 	print(entry)
+	# 	print(NamesUsage[entry])
+
+	return [NamesUsage,ModuleUsage,NameDefs] # check the ordering here. want FMN. NameDefs, ModuleUsage, NamesUsage??
 
 def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 	'''
 		Recursive function which implements guts of static analysis.
+		Documentation for _astmodule at:
+		https://greentreesnakes.readthedocs.io/en/latest/manipulating.html#inspecting-nodes
 	'''
 
-	if isinstance(e,compiler.ast.Import):
+	if isinstance(e,ast.Import):
 
-		for l in e.getChildren()[0]:
+		for l in e.names:
 			if CurScopeName not in ModuleUsage:
 				ModuleUsage[CurScopeName] = {}
-			if l[1] != None:
-				NameDefs[l[1]] = [l[1]]
+			if l.asname != None:
+				NameDefs[l.asname] = [l.asname]
 
-				ModuleUsage[CurScopeName][l[1]] = l[0]
+				ModuleUsage[CurScopeName][l.asname] = l.name
 			else:
-				NameDefs[l[0]] = [l[0]]
-				ModuleUsage[CurScopeName][l[0]] = l[0]
+				NameDefs[l.name] = [l.name]
+				ModuleUsage[CurScopeName][l.name] = l.name
 
-
-	elif isinstance(e,compiler.ast.From):
+	elif isinstance(e,ast.YieldFrom):
+		# changed from "From" to "YieldFrom"
 		modulename = e.getChildren()[0]
 		for f in e.getChildren()[1]:
 			attname = f[0]
@@ -193,9 +211,9 @@ def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 			ModuleUsage[CurScopeName][localname] = fullname
 
 
-	elif isinstance(e,compiler.ast.If):
+	elif isinstance(e,ast.If):
 		NewND = NameDefs.copy()
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e))
 		for f in Children:
 			GetUsesFromAST(f,NewND,ModuleUsage, NamesUsage,CurScopeName)
 		for l in list(NewND.keys()):
@@ -203,12 +221,12 @@ def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 				DictionaryOfListsAdd(NameDefs,l,NewND[l])
 
 
-	elif isinstance(e,compiler.ast.Class):
+	elif isinstance(e,ast.ClassDef):
 		NewND = NameDefs.copy()
 		fname = e.getChildren()[0]
 		if fname not in list(NamesUsage.keys()):
 			NamesUsage[fname] = []
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e)())
 		NewFU = {}
 		for f in Children:
 			GetUsesFromAST(f,NewND,ModuleUsage,NewFU,'__module__')
@@ -216,55 +234,56 @@ def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 			NamesUsage[fname] += NewFU[l]
 
 
-	elif isinstance(e,compiler.ast.Function):
+	elif isinstance(e,ast.Call):
 		NewND = NameDefs.copy()
 		fname = e.getChildren()[1]
 		fvars = e.getChildren()[2]
 		if fname not in list(NamesUsage.keys()):
 			NamesUsage[fname] = []
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e)())
 		NewFU = {}
 		for f in Children:
 			GetUsesFromAST(f,NewND,ModuleUsage, NewFU,fname)
 		for l in list(NewFU.keys()):
 			NamesUsage[fname] += [g for g in NewFU[l] if g.split('.')[0] not in fvars and g not in list(NewFU.keys())]
 
-	elif isinstance(e,compiler.ast.Lambda):
+	elif isinstance(e,ast.Lambda):
 		NewND = NameDefs.copy()
 		fvars = e.argnames
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e)())
 		for f in Children:
 			GetUsesFromAST(f,NewND,ModuleUsage, NamesUsage,CurScopeName)
 		NamesUsage[CurScopeName] = [g for g in NamesUsage[CurScopeName] if g.split('.')[0] not in fvars]
 
-	elif isinstance(e,compiler.ast.ListComp):
+	elif isinstance(e,ast.ListComp):
 		ForLoops = e.getChildren()[1:]
 		LoopVars = [f.getChildren()[0].getChildren()[0] for f in ForLoops]
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e)())
 		for f in Children:
 			GetUsesFromAST(f,NameDefs,ModuleUsage, NamesUsage,CurScopeName)
 		NamesUsage[CurScopeName] = [g for g in NamesUsage[CurScopeName] if g.split('.')[0] not in LoopVars]
 
-	elif isinstance(e,compiler.ast.For):
-		if isinstance(e.getChildren()[0],compiler.ast.AssTuple):
-			LoopControlVars = [ee.getChildren()[0] for ee in e.getChildren()[0].getChildren()]
+	elif isinstance(e,ast.For):
+		if isinstance(e.target,ast.Tuple):
+			LoopControlVars = [ee.getChildren()[0] for ee in e.target.getChildren()]
 		else:
-			LoopControlVars = [e.getChildren()[0].getChildren()[0]]
-		Children = ProperOrder(e.getChildNodes())
+			LoopControlVars = [e.target.id]
+
+		Children = ProperOrder(ast.iter_child_nodes(e))
 		for f in Children:
 			GetUsesFromAST(f,NameDefs,ModuleUsage, NamesUsage,CurScopeName)
 		NamesUsage[CurScopeName] = [g for g in NamesUsage[CurScopeName] if g.split('.')[0] not in LoopControlVars]
 
 
-	elif isinstance(e,compiler.ast.Assign):
-		Children = ProperOrder(e.getChildNodes())
+	elif isinstance(e,ast.Assign):
+		Children = ProperOrder(ast.iter_child_nodes(e))
 		for f in Children:
 			GetUsesFromAST(f,NameDefs,ModuleUsage, NamesUsage,CurScopeName)
 
-		if isinstance(e.getChildren()[0],compiler.ast.AssList) or isinstance(e.getChildren()[0],compiler.ast.AssTuple):
+		if isinstance(Children[0],ast.List) or isinstance(Children[0],ast.Tuple):
 			newnames = [ee.getChildren()[0] for ee in e.getChildren()[0].getChildren()]
 			targs = e.getChildren()[1]
-			if isinstance(targs, compiler.ast.List) or isinstance(targs, compiler.ast.Tuple):
+			if isinstance(targs, ast.List) or isinstance(targs, ast.Tuple):
 				assignmenttargets = e.getChildren()[1].getChildren()
 				assert len(newnames) == len(assignmenttargets), 'Wrong number of values to unpack.'
 				for (newname,assignmenttarget) in zip(newnames,assignmenttargets):
@@ -283,43 +302,41 @@ def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 						NameDefs[newname] = INT
 
 		else:
-			newname = e.getChildren()[0].asList()[0]
-			assignmenttarget = e.getChildren()[1]
+			newname = e.targets
+			assignmenttarget = e.value
 			INT = interpretation(assignmenttarget,NameDefs)[:]
-			if INT == [] and CurScopeName == '__module__':
-				NameDefs[newname] = [newname]
-			else:
-				NameDefs[newname] = INT
+			for n in newname: #added loop here
+				if INT == [] and CurScopeName == '__module__':
+					NameDefs[n] = [n]
+				else:
+					NameDefs[n] = INT
 
 
-	elif isinstance(e,compiler.ast.Getattr) or isinstance(e,compiler.ast.Name):
+	elif isinstance(e,ast.Attribute) or isinstance(e,ast.Name):
 		attnameset = interpretation(e,NameDefs)[:]
 		if not (attnameset is None):
 			DictionaryOfListsAdd(NamesUsage,CurScopeName,attnameset)
 
 		if attnameset != []:
-			Children = ProperOrder(e.getChildNodes())[1:]
+			Children = ProperOrder(ast.iter_child_nodes(e))[1:]
 		else:
-			Children = ProperOrder(e.getChildNodes())
+			Children = ProperOrder(ast.iter_child_nodes(e))
 		for f in Children:
 			GetUsesFromAST(f,NameDefs,ModuleUsage, NamesUsage,CurScopeName)
-
 
 	else:
-		Children = ProperOrder(e.getChildNodes())
+		Children = ProperOrder(ast.iter_child_nodes(e))
 		for f in Children:
 			GetUsesFromAST(f,NameDefs,ModuleUsage, NamesUsage,CurScopeName)
-
 
 def ProperOrder(NodeList):
 	'''
 	Order a list of AST nodes so that their analysis happens in proper for name defintions to be taken into account -- e.g. nonscope nodes first, then scope nodes.
 	'''
 
-	SameScopeChildren = [e for e in NodeList if not (isinstance(e,compiler.ast.Function) or isinstance(e,compiler.ast.Class))]
-	NewScopeChildren = [e for e in NodeList if isinstance(e,compiler.ast.Function) or isinstance(e,compiler.ast.Class)]
+	SameScopeChildren = [e for e in NodeList if not (isinstance(e,ast.Call) or isinstance(e,ast.ClassDef))]
+	NewScopeChildren = [e for e in NodeList if isinstance(e,ast.Call) or isinstance(e,ast.ClassDef)]
 	return SameScopeChildren + NewScopeChildren
-
 
 def interpretation(n, NameDefs):
 	'''
@@ -327,7 +344,7 @@ def interpretation(n, NameDefs):
 	in terms of names of its pieces
 	'''
 
-	if isinstance(n,compiler.ast.Getattr) or isinstance(n,compiler.ast.Name):
+	if isinstance(n,ast.Attribute) or isinstance(n,ast.Name):
 		nameseq = UnrollGetatt(n)
 		if nameseq != None:
 			if nameseq[0] in list(NameDefs.keys()):
@@ -349,13 +366,13 @@ def UnrollGetatt(getseq):
 	unrolls a Name or GetAttr compiler ast node into a dot-separated string name.
 	'''
 
-	if isinstance(getseq,compiler.ast.Name):
-		return [getseq.getChildren()[0]]
-	elif isinstance(getseq,compiler.ast.Getattr):
+	if isinstance(getseq,ast.Name):
+		# return [getseq.getChildren()[0]]
+		return getseq.id
+	elif isinstance(getseq,ast.Attribute):
 		lowerlevel = UnrollGetatt(getseq.getChildren()[0])
 		if not (lowerlevel is None):
 			return lowerlevel + [getseq.getChildren()[1]]
-
 
 def DictionaryOfListsAdd(D,key,newitem):
 	if key in list(D.keys()):
@@ -364,7 +381,6 @@ def DictionaryOfListsAdd(D,key,newitem):
 			D[key].extend(intersect)
 	else:
 		D[key] = newitem
-
 
 # def FastTopNames(FilePath):
 # 	try:
@@ -375,3 +391,10 @@ def DictionaryOfListsAdd(D,key,newitem):
 # 	else:
 # 		pass
 # 	Scopes = [l for l in AST.getChildren()[1] ]
+
+def main():
+    GetUses(FilePath = "/Users/jen/Desktop/PF/scripts/script.py")
+	# GetFullUses(FilePath = "/Users/jen/Desktop/PF/scripts/script.py")
+
+if __name__ == "__main__":
+    main()

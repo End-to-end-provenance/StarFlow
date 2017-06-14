@@ -266,7 +266,7 @@ def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple =
         changed since their last official build and therefore might be corrupted.
     '''
     ScriptsToCall = WhatWillUpdate(Seed, AU = AU, Exceptions=Exceptions, Simple=Simple, Forced=Forced, Pruning=Pruning,ProtectComputed=ProtectComputed)
-    print(ScriptsToCall)
+    print("Scripts to call " + str(ScriptsToCall))
     if len(Union(ScriptsToCall)) > 0:
         print('\nThe system would call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall))
     else:
@@ -275,8 +275,11 @@ def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple =
 def WhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
     if isinstance(Seed,str):
         Seed = Seed.split(',')
+    print("Seed to call " + str(Seed))
     ActivatedLinkListSequence = GetLinksBelow(Seed, AU = AU, Exceptions = Exceptions , Forced=Forced , Simple = Simple, Pruning=Pruning,ProtectComputed = ProtectComputed)
+    print("Activated LLSeq " + str(ActivatedLinkListSequence))
     ScriptList = [set(l['UpdateScript']) for l in ActivatedLinkListSequence]
+    print("Script List " + str(ScriptList))
     ScriptsToCall = ReduceListOfSetsOfScripts(ScriptList)
     return ScriptsToCall
 
@@ -772,3 +775,9 @@ def printscriptrounds(ScriptsToCall):
     RoundEndLines = ['\n------------------------------End Round ' + str(i+1) + '------------------------------\n' for i in range(len(S))]
 
     return '\n'.join([RoundStartLines[i] + '\n'.join(S[i]) + RoundEndLines[i] for i in range(len(S))])
+
+def main():
+    FindOutWhatWillUpdate(["script.py"])
+
+if __name__ == "__main__":
+    main()

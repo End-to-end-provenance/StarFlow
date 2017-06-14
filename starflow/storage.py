@@ -447,6 +447,8 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
     the modification state of parts, if any modifications appear to have been made.
     '''
 
+    print("calling UpdateModuleStorage")
+
     if is_string_like(path):
         paths = path.split(',')
     else:
@@ -456,6 +458,8 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
     for path in paths:
         if PathExists(path):
             [StoredModulePath,StoredTimesPath]  = GetStoredPathNames(path)
+            print(StoredModulePath)
+            print(StoredTimesPath)
             DirName = os.path.dirname(StoredModulePath)
             assert DirName == os.path.dirname(StoredTimesPath), "dirnames don't match"
             if not PathExists(DirName):
@@ -489,20 +493,25 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
 
                 #original
                 # ModuleName = '.'.join(path.split('/')[1:-1] + [ inspect.getmodulename(path) ])
+                # print("Module name")
+                # print(ModuleName)
 
-                #try 2
                 # script must be dir scripts inside my_env
                 import scripts
                 ModuleName = scripts.__name__
+                print("Module name")
+                print(ModuleName)
 
                 try:
+                    print("Adding inits above " + path)
                     AddInitsAbove(path)
                     Module = __import__(ModuleName,fromlist=[ModuleName])
                     #exec('import ' + ModuleName + ' as Module')
-                    imp.reload(Module)
+                    imp.reload(Module) # pickle not same object error. comment this out?
                     L = {}
                     exec(compile(open(path).read(), path, 'exec'),L)
                     Static = starflow.staticanalysis.GetFullUses(path)
+                    print("GetFullUses done and not an empty dict " + str(len(Static)))
 
                 except:
                     print('The Module', ModuleName, 'isn\'t compiling, nothing stored.  Specifically:')
@@ -531,6 +540,8 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                             print(ModuleName + '.' + p, 'appears to have been added.')
                             NewStoredTimes[p] = os.path.getmtime(path)
 
+                    print("wanting to pickle into " +StoredModulePath)
+                    print(type(NewStoredModule))
                     F = open(StoredModulePath,'wb')
                     pickle.dump(NewStoredModule,F)
                     F.close()
@@ -578,7 +589,19 @@ class StoredModulePart():
     '''
 
 
-    __module__ =  'starflow.storage'    #<-- this is specified so that instances of this class pickle correctly, even if they're instantiated at the command prompt.  pickled class instances are pickled with a reference to the module where the instance was made, and unless sthis is set, the value is wrong in the pickled object.  Unfortunately this is inconvenient because if you change the location of this class you have to change the setting of this function, invalidating all the pickled class instances .... ugh.  A better solution is required.
+    #__module__ =  'starflow.storage'
+    # change this to the dot path to the local installation of StarFlow
+    __module__ = 'Users.jen.miniconda3.envs.python3.4.lib.python3.4.site-packages.StarFlow-0.9999-py3.4.egg.starflow.storage'
+
+    """ this is specified so that instances of this class pickle correctly,
+    even if they're instantiated at the command prompt.  pickled class
+    instances are pickled with a reference to the module where the instance
+    was made, and unlesss this is set, the value is wrong in the pickled
+    object.  Unfortunately this is inconvenient because if you change the
+    location of this class you have to change the setting of this function,
+    invalidating all the pickled class instances .... ugh.
+    A better solution is required."""
+
     def __init__(self,obj,ScopeName=None,Static=None,recursive = False):
         self.static = Static
         self.typestr = repr(type(obj))
@@ -710,8 +733,12 @@ def GetStoredPathNames(path):
         from path name of the module to be stored.
     '''
 
-    # StoredPath = os.path.join(WORKING_DE.modules_dir, path.strip('../').replace('/','__') )
-    StoredPath = WORKING_DE.modules_dir
+    StoredPath = os.path.join(WORKING_DE.modules_dir, path.strip('../').replace('/','__') )
     result = [os.path.join(StoredPath ,'.ModuleStorage'), os.path.join(StoredPath,'.ModuleTimes')]
-    # print(result)
     return result
+
+def main():
+    GetStoredModule("/Users/jen/Desktop/PF/scripts/script.py")
+
+if __name__ == "__main__":
+    main()

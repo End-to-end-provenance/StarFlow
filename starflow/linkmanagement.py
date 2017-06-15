@@ -63,14 +63,12 @@ def LinksFromOperations(FileList,Aliases = None, AddImplied = False,
     '''
 
     #load up cached linklists
-
     STORED_LINKS_FILE = os.path.join(WORKING_DE.links_dir,'StoredLinks')
     if not PathExists(STORED_LINKS_FILE):
         names = ['LinkType','LinkSource','SourceFile','LinkTarget','TargetFile','UpdateScript','UpdateScriptFile','IsFast']
         StoredLinks = numpy.rec.fromarrays([[],[],[],[],[],[],[],[]],names=names, formats = ['int']*len(names))
     else:
         StoredLinks = numpy.load(STORED_LINKS_FILE)
-
 
     STORED_TIMES_FILE = os.path.join(WORKING_DE.links_dir,'StoredTimes')
     if not PathExists(STORED_TIMES_FILE):
@@ -100,7 +98,12 @@ def LinksFromOperations(FileList,Aliases = None, AddImplied = False,
     FileArray = numpy.array(FileList)
     FileArray.sort()
 
-    A = fastisin(FileArray,StoredTimesFiltered['FileName'])
+    try:
+        A = fastisin(FileArray,StoredTimesFiltered['FileName'])
+    except:
+        FileArray = numpy.array(FileList, dtype = '<U39')
+        A = fastisin(FileArray,StoredTimesFiltered['FileName'])
+
     CurrentTimes = numpy.array([os.path.getmtime(x) for x in StoredTimesFiltered['FileName']])
     B = CurrentTimes > StoredTimesFiltered['ModTime']
 
@@ -142,7 +145,6 @@ def LinksFromOperations(FileList,Aliases = None, AddImplied = False,
         NewLinks.dump(STORED_LINKS_FILE)
     NewTimes.dump(STORED_TIMES_FILE)
 
-
     #handle creation of Implied Links
     STORED_IMPLIED_FILE = os.path.join(WORKING_DE.links_dir,'StoredImpliedLinks')
     if not PathExists(STORED_IMPLIED_FILE):
@@ -168,7 +170,6 @@ def LinksFromOperations(FileList,Aliases = None, AddImplied = False,
     DummyNew = SimpleStack([FastRecarrayDifference(StoredDummyLinks,DummyDeleted),DummyAdded])
     DummyNew.dump(STORED_DUMMY_FILE)
 
-
     #determine which links to return (ALL links are cached, but only those desired related to the user specified FileList are actually returned by this function)
     D = fastisin(NewLinks['UpdateScriptFile'],FileArray)
     LinksToReturn = NewLinks[D]
@@ -186,8 +187,6 @@ def LinksFromOperations(FileList,Aliases = None, AddImplied = False,
         LinksToReturn = LinksToReturn[(LinksToReturn['LinkType'] != 'Uses') | fastisin(LinksToReturn['SourceFile'],FileArray)]
 
     return LinksToReturn
-
-
 
 def GetImpliedLinks(NewLinks, LinkList):
     '''This computes the implied links --- assuming that all implied links in the "LinkList" argument have already by computed, it only computes the implied links that will be added by the addition of the NewLinks.
@@ -219,13 +218,10 @@ def GetImpliedLinks(NewLinks, LinkList):
     else:
         return LinkList[0:0]
 
-
 def SameRoot(X,Y):
     XX = ['/'.join(x.split('/')[:-2]) if x[-1] != '/' else '/'.join(x.split('/')[:-2]) for x in X]
     YY = ['/'.join(x.split('/')[:-2]) if x[-1] != '/' else '/'.join(x.split('/')[:-2]) for x in Y]
     return fastequalspairs(XX,YY)
-
-
 
 def GetDummyLinks(NewLinks,LinkList):
     '''This computes the dummy links --- assuming that all dummy links
@@ -267,8 +263,6 @@ def GetDummyLinks(NewLinks,LinkList):
     else:
         return LinkList[0:0]
 
-
-
 def GutsComputeLinks(FileList):
     '''
         This function actually computes the links contained
@@ -287,13 +281,7 @@ def GutsComputeLinks(FileList):
     SucceededList = []
 
     for opfile in FileList:  #<-- for each op in the list of operations,
-        print(opfile)
         StoredModule = GetStoredModule(opfile)  #<-- get stored version of information about the module -- GetStoredModules is defined in ../System/MetaData.py, see that for information.
-        print(type(StoredModule))
-
-        for entry in StoredModule:
-            print(entry)
-            print(StoredModule[entry])
 
         if StoredModule:   #<-- if stored version f information is sucessfully obtained,  go ahead
             SucceededList += [opfile]
@@ -323,8 +311,6 @@ def GutsComputeLinks(FileList):
 
     return [LinkList,SucceededList]
 
-
-
 def ComputeLinksFromOperations(FileList):
     '''
      Wrapper for GutsComputeLinks
@@ -337,10 +323,11 @@ def ComputeLinksFromOperations(FileList):
     Header = ['LinkType','LinkSource','SourceFile','LinkTarget','TargetFile','UpdateScript','UpdateScriptFile','IsFast']  #<-- the field types in the list of links
     #output
     if len(LinkList) > 0:
-        return [numpy.rec.fromrecords(LinkList,names = Header),SucceededList]
+        result = [numpy.rec.fromrecords(LinkList,names = Header),SucceededList]
     else:
-        return [numpy.rec.fromarrays([[] for i in Header],names = Header),SucceededList]
+        result = [numpy.rec.fromarrays([[] for i in Header],names = Header),SucceededList]
 
+    return result
 
 def GetStoredAttributes(op,name,NoVal=None):
     if 'func_dict' in list(op.keys()):
@@ -393,17 +380,12 @@ def GetStoredDefaultVal(op,name,NoVal=None):
     else:
         return NoVal
 
-
-
-
 def ReduceListOfSetsOfScripts(ScriptList):
     '''
         Given a list of sets of scripts, produces a reduced version retaining
         only the _last_ call to any given script.
     '''
     return [J.difference(['None']) for J in [S.difference(Union([T for (j,T) in enumerate(ScriptList) if j > i])) for (i,S) in enumerate(ScriptList)]]
-
-
 
 def GetLinksBelow(Seed, AU = None, Exceptions = None, Forced = False,
                          Simple=False, Pruning = True,ProtectComputed = False,
@@ -463,17 +445,13 @@ def GetLinksBelow(Seed, AU = None, Exceptions = None, Forced = False,
     if isinstance(Seed,str):
         Seed = Seed.split(',')
     LinkList = LinksFromOperations(WORKING_DE.load_live_modules(),AddDummies=True)
-    print("Output for LinksFromOps " + str(LinkList))
     LinkList = FilterForAutomaticUpdates(LinkList,AU=AU,Exceptions=Exceptions)
-    print("output for Filter " + str(LinkList))
 
     if not Forced:
         T = PropagateThroughLinkGraphWithTimes(Seed,LinkList,Simple=Simple, Pruning=Pruning,ProtectComputed = ProtectComputed)
         return [ll[ll['Activated']] for ll in T]
     else:
         return PropagateThroughLinkGraph(Seed,LinkList)
-
-
 
 def GetII(LinkList,Seed):
 
@@ -606,8 +584,6 @@ def UpdateGuts(UpdateList,LinkList,MtimesDict,PtimesDict,ProtectComputed):
                 TimeVal = numpy.nan
             TargetRecs += [(str(i[0]),) + tuple(LinkList[i[0]]) + (i[1],TimeVal,i[2],MtimesDict[LinkList['LinkTarget'][i[0]]] if TargetExists else numpy.nan,  float(PtimesDict[LinkList['LinkTarget'][i[0]]]) if ProtectComputed else numpy.nan, Activated)]
     return TargetRecs
-
-
 
 def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
                                        Pruning = True, HoldTimes = None,
@@ -754,8 +730,6 @@ def PropagateThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.root_dir):
 
     return PropagateSeed(Seed,LinkList,'LinkSource','LinkTarget','LinkSource','CreatedBy')
 
-
-
 def PropagateUpThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.relative_root_dir):
 
     '''
@@ -763,8 +737,6 @@ def PropagateUpThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.relative_r
     '''
 
     return PropagateSeed(Seed,LinkList,'LinkTarget','LinkSource','LinkTarget','CreatedBy')
-
-
 
 def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
 
@@ -818,8 +790,6 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
             ActivatedLinkIndices.append([UpdateList[:]])
     return [LinkList[[i for i in l]] for l in ActivatedLinkIndices]
 
-
-
 def GetI(List,Seed):
     s = List.argsort() ; List = List[s]
     Seed = numpy.array(Seed) ; Seed.sort()
@@ -832,9 +802,6 @@ def GetI(List,Seed):
         return s[I]
     else:
         return numpy.array([],int)
-
-
-
 
 def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relative_root_dir):
     '''
@@ -851,8 +818,6 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
     (If none a message is printed.)
 
     '''
-
-
 
     if isinstance(Seed,str):
         Seed = Seed.split(',')
@@ -876,15 +841,13 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
         else:
             return set(P[abs(level+1)]['LinkSource'])
 
-
-
 def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices = False):
     '''
     Filters a link links removing links that are not meant to be
     automatically updated when the system runs downstream
     updating -- except allows "exceptions" to pass.
     The strategy is to basically get the list of filters from a
-    user-specified configuration file whoe path is given by the
+    user-specified configuration file whose path is given by the
     environment variable 'AutomaticUpdatesPath'.
 
     ARGUMENTS:
@@ -900,7 +863,6 @@ def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices =
         A subarray of LList if
     else:
         A numpy array of indices of LList.
-
 
     '''
     TT = time.time()
@@ -947,7 +909,6 @@ def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices =
         else:
             ExcpS = numpy.zeros((len(LinkList),),bool)
 
-
         Indices = ((ExcpT | CIOT) & (LinkList['UpdateScript'] == 'None')) | (ExcpS | CIOS)
     else:
         Indices = []
@@ -958,8 +919,6 @@ def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices =
         return LinkList[Indices]
     else:
         return LList[0:0]
-
-
 
 def UpstreamLinks(Targets,depends_on = WORKING_DE.relative_root_dir):
 
@@ -972,13 +931,18 @@ def UpstreamLinks(Targets,depends_on = WORKING_DE.relative_root_dir):
     else:
         return []
 
-
 DefaultValueForAutomaticUpdates = ['^.*']
 #DefaultValueForLiveModuleFilters = {'../Operations/' :  ['../*']}
 DefaultValueForLiveModuleFilters = {'../' : ['../*']}
 
 def main():
-    LinksFromOperations(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # LL = LinksFromOperations(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # print(LL)
+    # result = FilterForAutomaticUpdates(LL)
+    # result = PropagateUpThroughLinkGraph(["/Users/jen/Desktop/PF/scripts/script.py"], LL)
+    # print(result)
+
+    GetConnected("/Users/jen/Desktop/PF/scripts/script.py")
 
 if __name__ == "__main__":
     main()

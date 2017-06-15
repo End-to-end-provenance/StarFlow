@@ -773,6 +773,7 @@ def fastisin(Y,Z):
 
     returns boolean array of those indices
     '''
+
     if len(Z) > 0:
         T = Z.copy()
         T.sort()
@@ -1109,7 +1110,7 @@ def CheckInOutFormulae(ExpList,S):
 def AddInitsAbove(opfile):
     '''
     Given a python to a pytho module opfile, add an empty __init__.py file to the
-    directory containing opfile, if not such file exists.
+    directory containing opfile, if no such file exists.
     Reset mod time of directory so it appears as if nothing as changed.
 
     The intent of this is to allow python modules to be placed in directories
@@ -1117,13 +1118,13 @@ def AddInitsAbove(opfile):
     without the user having to remember to put the '__init__.py' in the directory
     that the module is in.   The timestamp of the containing directory is reset
     if the __init__.py is added to make sure that no stupid re-computations are
-    done that make it appear as if things have changed when the havent.
+    done that make it appear as if things have changed when they have not.
 
     '''
     DirList = opfile.split('/')[:-1]
-
+    print(DirList)
     inner_most_dir = DirList[-1]
-    
+
     # for ii in range(1,len(DirList)):
         # DirName = '/'.join(DirList[:ii+1]) + '/'
         # print(DirName)
@@ -1137,7 +1138,7 @@ def AddInitsAbove(opfile):
     oldatime = os.path.getatime(inner_most_dir)
     oldmtime = os.path.getmtime(inner_most_dir)
     if '__init__.py' not in listdir(inner_most_dir):
-        F = open(DirName + '__init__.py','w')
+        F = open(inner_most_dir + '__init__.py','w')
         F.close()
     os.utime(inner_most_dir,(oldatime,oldmtime))
 

@@ -31,7 +31,6 @@ def GetFullUses(FilePath):
 	'''
 
 	ModuleName = FilePath.lstrip('../').rstrip('.py').replace('/','.')
-	print("Get full uses " +ModuleName)
 
 	try:
 		[F,M,N] = GetUses(FilePath=FilePath)
@@ -39,7 +38,6 @@ def GetFullUses(FilePath):
 		return None
 	else:
 		pass
-
 
 	Mentions = ListUnion(list(F.values()))
 
@@ -73,8 +71,9 @@ def GetFullUses(FilePath):
 		B = [l for l in N[k] if l not in list(InternalRefs.keys()) + list(LocalExternals.keys()) + list(LocalStarUses.keys()) + list(LocalMoreInternals.keys())]
 		FF[k] = [A,B]
 
-	return FF
+	# print(M) # when is M used if it does not contribute to dict returned? should it be returned? why is is stored at all?
 
+	return FF
 
 def usechecking(Mentions,M,N,FilePath,ModuleName,Internals,key):
 
@@ -161,19 +160,6 @@ def GetUses(AST = None,FilePath=None):
 	NamesUsage = {}
 	ModuleUsage = {}
 	GetUsesFromAST(AST,NameDefs, ModuleUsage, NamesUsage,'__module__')
-
-	# print("NameDefs")
-	# for entry in NameDefs:
-	# 	print(entry)
-	# 	print(NameDefs[entry])
-	# print("ModuleUsage")
-	# for entry in ModuleUsage:
-	# 	print(entry)
-	# 	print(ModuleUsage[entry])
-	# print("NamesUsage")
-	# for entry in NamesUsage:
-	# 	print(entry)
-	# 	print(NamesUsage[entry])
 
 	return [NamesUsage,ModuleUsage,NameDefs] # check the ordering here. want FMN. NameDefs, ModuleUsage, NamesUsage??
 
@@ -359,8 +345,6 @@ def interpretation(n, NameDefs):
 	else:
 		return []
 
-
-
 def UnrollGetatt(getseq):
 	'''
 	unrolls a Name or GetAttr compiler ast node into a dot-separated string name.
@@ -393,8 +377,7 @@ def DictionaryOfListsAdd(D,key,newitem):
 # 	Scopes = [l for l in AST.getChildren()[1] ]
 
 def main():
-    GetUses(FilePath = "/Users/jen/Desktop/PF/scripts/script.py")
-	# GetFullUses(FilePath = "/Users/jen/Desktop/PF/scripts/script.py")
+    f = GetFullUses(FilePath = "/Users/jen/Desktop/PF/scripts/script.py")
 
 if __name__ == "__main__":
     main()

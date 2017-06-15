@@ -146,7 +146,6 @@ ARCHIVE_DIR = WORKING_DE.archive_dir
 
 def SetupRun(creates=(WORKING_DE.relative_archive_dir,WORKING_DE.relative_tmp_dir)):
 
-
     SsID = GetSessionID()
     SsName=str(SsID)
     SsTemp = os.path.join(TEMPFOLDER, SsName + '/')
@@ -161,7 +160,6 @@ def SetupRun(creates=(WORKING_DE.relative_archive_dir,WORKING_DE.relative_tmp_di
         delete(TempStdOut)
 
     return [SsID,SsName,SsTemp,SsRTStore,TempStdOut]
-
 
 def GetSessionID():
     if not PathExists(TEMPFOLDER):
@@ -185,7 +183,6 @@ def GetSessionID():
             F.close()
             return 0
 
-
 def ReleaseSessionID(idn):
     if PathExists(SsIDFile):
         N = open(SsIDFile,'r').read().strip().strip(',').split(',')
@@ -194,7 +191,6 @@ def ReleaseSessionID(idn):
             F = open(SsIDFile,'w')
             F.write(','.join(N))
             F.close()
-
 
 def MakeUpdated(Targets,Exceptions = None, Simple = True, Forced = False,
                        Pruning=True,ProtectComputed = False,EmailWhenDone=None,
@@ -225,7 +221,6 @@ def MakeUpdated(Targets,Exceptions = None, Simple = True, Forced = False,
     Exceptions += list(set(USL['UpdateScript']).difference(['None']))
     LinkUpdate(USFs, Exceptions = Exceptions, Simple =Simple, Forced=Forced,Pruning=Pruning,ProtectComputed=ProtectComputed,EmailWhenDone=EmailWhenDone,CallMode=CallMode)
 
-
 def FullUpdate(Seed = ['../'],AU = None,Exceptions = None,Simple = True,Forced=False,Pruning=True,ProtectComputed = False,EmailWhenDone=None,CallMode=DEFAULT_CALLMODE):
     '''
     Implements the downstream updating style.
@@ -248,7 +243,6 @@ def FullUpdate(Seed = ['../'],AU = None,Exceptions = None,Simple = True,Forced=F
         Seed = Seed.split(',')
     LinkUpdate(Seed, AU = AU, Exceptions = Exceptions, Simple = Simple,Forced=Forced,Pruning=Pruning,ProtectComputed = ProtectComputed,EmailWhenDone=EmailWhenDone,CallMode=CallMode)
 
-
 def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
     '''
     Determine and print out readable report indicating which files
@@ -266,7 +260,6 @@ def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple =
         changed since their last official build and therefore might be corrupted.
     '''
     ScriptsToCall = WhatWillUpdate(Seed, AU = AU, Exceptions=Exceptions, Simple=Simple, Forced=Forced, Pruning=Pruning,ProtectComputed=ProtectComputed)
-    print("Scripts to call " + str(ScriptsToCall))
     if len(Union(ScriptsToCall)) > 0:
         print('\nThe system would call the following operations, in ' + str(len([l for l in ScriptsToCall if len(l) > 0])) + ' round(s):\n' + printscriptrounds(ScriptsToCall))
     else:
@@ -275,18 +268,13 @@ def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple =
 def WhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
     if isinstance(Seed,str):
         Seed = Seed.split(',')
-    print("Seed to call " + str(Seed))
     ActivatedLinkListSequence = GetLinksBelow(Seed, AU = AU, Exceptions = Exceptions , Forced=Forced , Simple = Simple, Pruning=Pruning,ProtectComputed = ProtectComputed)
-    print("Activated LLSeq " + str(ActivatedLinkListSequence))
     ScriptList = [set(l['UpdateScript']) for l in ActivatedLinkListSequence]
-    print("Script List " + str(ScriptList))
     ScriptsToCall = ReduceListOfSetsOfScripts(ScriptList)
     return ScriptsToCall
 
-
 def LinkUpdate(Seed,AU = None, Exceptions = None,Simple=False,Forced = False,
-                 Pruning = True,ProtectComputed = False,EmailWhenDone = None,
-CallMode=DEFAULT_CALLMODE,depends_on=WORKING_DE.relative_root_dir,creates = WORKING_DE.relative_config_dir):
+                 Pruning = True,ProtectComputed = False,EmailWhenDone = None, CallMode=DEFAULT_CALLMODE,depends_on=WORKING_DE.relative_root_dir,creates = WORKING_DE.relative_config_dir):
     '''
     Given a seed and some options, call GetLinksBelow routine from LinkManagement,
     and feed the result of that to the automatic updater.
@@ -310,7 +298,6 @@ CallMode=DEFAULT_CALLMODE,depends_on=WORKING_DE.relative_root_dir,creates = WORK
         Seed = Seed.split(',')
     ActivatedLinkListSequence = GetLinksBelow(Seed, AU = AU, Exceptions = Exceptions , Forced=Forced , Simple = Simple, Pruning=Pruning,ProtectComputed = ProtectComputed)
     UpdateLinks(ActivatedLinkListSequence,Seed,AU = AU, Exceptions = Exceptions,Simple=Simple,Pruning=Pruning,Forced=Forced,ProtectComputed = ProtectComputed,EmailWhenDone=EmailWhenDone,CallMode=CallMode)
-
 
 def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
                  Simple=None,Pruning=None,Forced=None,ProtectComputed = False,
@@ -436,7 +423,6 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
 
     sys.stdout = sys.__stdout__
 
-
 def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepListj, EmailWhenDone,creates = WORKING_DE.relative_root_dir):
 
     Creates = CreatesList
@@ -475,7 +461,6 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
         print('Just Touching outputs of', j, ':', Creates)
         FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,OrigDirInfo,TempSOIS,TempMetaFile,CallMode,EmailWhenDone,SsName,SsRTStore,IsFast)
 
-
 def HandleChildJobs(j,SsTemp,EmailWhenDone,SsName,SsRTStore,IsFast,CallMode):
     TempMetaFile = os.path.join(SsTemp , TEMPMETAFILE + '_' + j)
     if PathExists(TempMetaFile):
@@ -502,8 +487,6 @@ def HandleChildJobs(j,SsTemp,EmailWhenDone,SsName,SsRTStore,IsFast,CallMode):
                                 EmailWhenDone,
                                 SsName,SsRTStore,IsFast,
                                 child_jobs = child_jobs)
-
-
 
 def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,OrigDirInfo,TempSOIS,TempMetaFile,CallMode,EmailWhenDone,SsName,SsRTStore,IsFast,child_jobs = None):
 
@@ -551,8 +534,6 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
 
     if CallMode == 'DRMAA':
         EmailResults(EmailWhenDone,'Call to ' + j + ', run ' + SsName ,TempSOIS)
-
-
 
 def RecordPendingStatus(ExitStatus,RunOutput,child_jobs,Before,After,Creates,DepListj,OriginalTimes,OrigDirInfo,TempSOIS,TempMetaFile):
     F = open(TempMetaFile,'w')
@@ -623,8 +604,6 @@ def printfailuremessage(op,Creates,ExitStatus):
     FailureStatement = 'threw an exception during attempted execution (see above for details).' if ExitStatus != 0 else 'ran without throwing an exception, but for some reason the outputs ' + ', '.join(UncreatedFiles) + ' never got created.'
     print(op , FailureStatement , 'System will consider this run a failure and (if possible) will revert to old versions of ' , ','.join(Creates) , '.  Downstream updates will be cancelled.')
 
-
-
 def InSessionStdOutToStdOut(TempStdOutInSession,TempStdOut):
 
     if PathExists(TempStdOutInSession):
@@ -639,9 +618,7 @@ def InSessionStdOutToStdOut(TempStdOutInSession,TempStdOut):
     F.write(statement)
     F.close()
 
-
 def GetCommand(j,ModuleName,OpName,TempStdOutInSession,TempOutput,CallMode=DEFAULT_CALLMODE):
-
 
     Commands = ["'import pickle,traceback",
             "creates = (\"" + TempStdOutInSession + "\",\"" + TempOutput + "\")",
@@ -657,8 +634,6 @@ def GetCommand(j,ModuleName,OpName,TempStdOutInSession,TempOutput,CallMode=DEFAU
             "F.close()'"]
     Command = '\n'.join(Commands)
 
-
-
     return Command
 
 def MoveToTemp(Creates,IsFast,SsRTStore):
@@ -670,7 +645,6 @@ def MoveToTemp(Creates,IsFast,SsRTStore):
             os.rename(temp_name,garbage_name)
         if PathExists(f) and not IsFast:
             os.rename(f,temp_name)
-
 
 def SetupOp(j,CreateList,SsTemp,creates=WORKING_DE.relative_tmp_dir):
     OriginalTimes = {}
@@ -691,7 +665,6 @@ def SetupOp(j,CreateList,SsTemp,creates=WORKING_DE.relative_tmp_dir):
 
     return [OriginalTimes,OriginalDirInfo,TempStdOutInSession,TempOutput,TempMetaFile]
 
-
 def GetCreatesAndIsFast(RemainingLinkList):
 
     CreateLinks = RemainingLinkList[RemainingLinkList['LinkType'] == 'CreatedBy']
@@ -706,7 +679,6 @@ def GetCreatesAndIsFast(RemainingLinkList):
 
     return [CreateDict,IsFastDict]
 
-
 def MakeTouchList(RemainingLinkList,ScriptsToCall,TouchList,TotalNoDiff,NoDiff,Seed,Simple,Pruning,ProtectComputed):
 
     if len(NoDiff) > 0:
@@ -716,9 +688,7 @@ def MakeTouchList(RemainingLinkList,ScriptsToCall,TouchList,TotalNoDiff,NoDiff,S
         RemainingLinkListSequence = [ll[ll['Activated']] for ll in PropagateThroughLinkGraphWithTimes(Seed,R, Simple=Simple,Pruning=Pruning,ProtectComputed = ProtectComputed)]
         TouchList.update(Union(ScriptsToCall).difference(Union([set(l['UpdateScript']) for l in RemainingLinkListSequence])))
 
-
     return RemainingLinkList
-
 
 def RemoveDownstreamOfFailures(RemainingLinkList,ScriptsToCall,Round,ToRemove,Seed,Simple,Pruning,ProtectComputed):
     if len(ToRemove) > 0:
@@ -736,7 +706,6 @@ def RemoveDownstreamOfFailures(RemainingLinkList,ScriptsToCall,Round,ToRemove,Se
 
     return RemainingLinkList
 
-
 def EmailResults(EmailWhenDone,SsName,FileName):
 
     account = WORKING_DE.gmail_account_name
@@ -752,7 +721,6 @@ def EmailResults(EmailWhenDone,SsName,FileName):
         except:
             print('No email sent.')
             traceback.print_exc()
-
 
 def RemoveScriptsToBeCreated(TotalLinkList,ScriptsToCall):
     TotalLinkList.sort(order=['UpdateScriptFile'])
@@ -777,7 +745,7 @@ def printscriptrounds(ScriptsToCall):
     return '\n'.join([RoundStartLines[i] + '\n'.join(S[i]) + RoundEndLines[i] for i in range(len(S))])
 
 def main():
-    FindOutWhatWillUpdate(["script.py"])
+    FindOutWhatWillUpdate("/Users/jen/Desktop/PF/scripts/script.py")
 
 if __name__ == "__main__":
     main()

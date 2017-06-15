@@ -91,6 +91,7 @@ import traceback
 import starflow.staticanalysis
 import starflow.de as de
 import imp
+import importlib
 
 DE_MANAGER = de.DataEnvironmentManager()
 WORKING_DE = DE_MANAGER.working_de
@@ -250,8 +251,6 @@ def BlockUpdateModuleStorage(L):
     for l in L:
         UpdateModuleStorage(l)
 
-
-
 def GetStoredModule(path,Force=False):
     '''
     Returns stored module for the python module whose file is at 'path'.
@@ -262,7 +261,7 @@ def GetStoredModule(path,Force=False):
     '''
     UpdateModuleStorage(path,Force=Force)
     [StoredModulePath,StoredModuleTimesPath]  = GetStoredPathNames(path)
-    print(StoredModulePath)
+
     try:
         return pickle.load(open(StoredModulePath,'rb'))
     except:
@@ -283,6 +282,7 @@ def GetStoredModuleTimes(path):
     '''
     UpdateModuleStorage(path)
     [StoredModulePath,StoredModuleTimesPath]  = GetStoredPathNames(path)
+
     try:
         return pickle.load(open(StoredModuleTimesPath,'rb'))
     except:
@@ -304,8 +304,6 @@ def GetNestedObject(name,Members):
                 o = GetNestedObject(name[len(mname)+1:],dict(inspect.getmembers(Members[mname])))
                 return o
 
-
-
 def GetExtendedMembers(obj,Static):
     '''
         Technical dependency of ExtractParts
@@ -323,7 +321,6 @@ def GetExtendedMembers(obj,Static):
 
     return Members
 
-
 def GetExtendedExecedNames(Execed,Static):
     '''
         Technical dependency of ExtractParts
@@ -337,7 +334,6 @@ def GetExtendedExecedNames(Execed,Static):
             Names.append(k)
 
     return Names
-
 
 def ExtractParts(obj,Execed=None,Static=None,ScopeName=None):
     '''
@@ -358,10 +354,8 @@ def ExtractParts(obj,Execed=None,Static=None,ScopeName=None):
     verify the information stored about the object.
     '''
 
-
     if Static == None:
         Static = {}
-
 
     if not ScopeName and hasattr(obj,'__name__'):
         ScopeName = obj.__name__
@@ -378,8 +372,6 @@ def ExtractParts(obj,Execed=None,Static=None,ScopeName=None):
     Parts = dict([(k,StoredModulePart(Members[k],ScopeName=ScopeName,Static = Static[k] if k in list(Static.keys()) else None)) for k in AllowedNames])
 
     return Parts
-
-
 
 def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = False):
     '''
@@ -447,8 +439,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
     the modification state of parts, if any modifications appear to have been made.
     '''
 
-    print("calling UpdateModuleStorage")
-
     if is_string_like(path):
         paths = path.split(',')
     else:
@@ -458,8 +448,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
     for path in paths:
         if PathExists(path):
             [StoredModulePath,StoredTimesPath]  = GetStoredPathNames(path)
-            print(StoredModulePath)
-            print(StoredTimesPath)
             DirName = os.path.dirname(StoredModulePath)
             assert DirName == os.path.dirname(StoredTimesPath), "dirnames don't match"
             if not PathExists(DirName):
@@ -491,27 +479,19 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                         StoredTimes = {}
                         StoredModule = {}
 
-                #original
-                # ModuleName = '.'.join(path.split('/')[1:-1] + [ inspect.getmodulename(path) ])
-                # print("Module name")
-                # print(ModuleName)
 
-                # script must be dir scripts inside my_env
-                import scripts
-                ModuleName = scripts.__name__
-                print("Module name")
-                print(ModuleName)
+                dir_name = path.split('/')[-2]
+                module_name = inspect.getmodulename(path)
+                ModuleName = dir_name + "." + module_name
 
                 try:
-                    print("Adding inits above " + path)
                     AddInitsAbove(path)
-                    Module = __import__(ModuleName,fromlist=[ModuleName])
-                    #exec('import ' + ModuleName + ' as Module')
+                    Module = importlib.import_module(ModuleName)
+
                     imp.reload(Module) # pickle not same object error. comment this out?
                     L = {}
                     exec(compile(open(path).read(), path, 'exec'),L)
                     Static = starflow.staticanalysis.GetFullUses(path)
-                    print("GetFullUses done and not an empty dict " + str(len(Static)))
 
                 except:
                     print('The Module', ModuleName, 'isn\'t compiling, nothing stored.  Specifically:')
@@ -540,8 +520,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                             print(ModuleName + '.' + p, 'appears to have been added.')
                             NewStoredTimes[p] = os.path.getmtime(path)
 
-                    print("wanting to pickle into " +StoredModulePath)
-                    print(type(NewStoredModule))
                     F = open(StoredModulePath,'wb')
                     pickle.dump(NewStoredModule,F)
                     F.close()
@@ -588,10 +566,7 @@ class StoredModulePart():
 
     '''
 
-
     #__module__ =  'starflow.storage'
-    # change this to the dot path to the local installation of StarFlow
-    __module__ = 'Users.jen.miniconda3.envs.python3.4.lib.python3.4.site-packages.StarFlow-0.9999-py3.4.egg.starflow.storage'
 
     """ this is specified so that instances of this class pickle correctly,
     even if they're instantiated at the command prompt.  pickled class
@@ -634,7 +609,6 @@ class StoredModulePart():
                 [self.loadmethod, self.descr, self.content] = [None,'Unpicklable',repr(obj)]
             else:
                 [self.loadmethod, self.descr, self.content,self.eqmethod] = ['cPickle','',c,'cPickle']
-
 
     def reconstitute(self):
         if self.loadmethod in [None,'']:
@@ -690,7 +664,6 @@ def FunctionDumps(obj):
 
     return  A
 
-
 def CodeEquals(c1,c2):
     '''
         Equality testing for code objects.
@@ -705,7 +678,6 @@ def CodeEquals(c1,c2):
 def ModuleNameEquals(s,o):
     m = min(len(s),len(o))
     return abs(len(s) - len(o)) <= 1 and o[:m-2] == s[:m-2]
-
 
 def StoredDocstring(path):
     Docstring = ''
@@ -738,7 +710,7 @@ def GetStoredPathNames(path):
     return result
 
 def main():
-    GetStoredModule("/Users/jen/Desktop/PF/scripts/script.py")
+    GetStoredModule("/Users/jen/Desktop/PF/scripts/script.py", Force = True)
 
 if __name__ == "__main__":
     main()

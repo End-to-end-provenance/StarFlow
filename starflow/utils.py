@@ -3,7 +3,6 @@
 """Miscellaneous utilities.
 """
 
-
 import sys
 import os
 import inspect
@@ -51,7 +50,6 @@ def print_timing(func):
         return res
     return wrapper
 
-
 def PermInverse(s):
     '''
         Fast invert a numpy permutation.
@@ -59,7 +57,6 @@ def PermInverse(s):
     X = numpy.array(list(range(len(s))))
     X[s] = list(range(len(s)))
     return X
-
 
 class BadCheckError:
     '''
@@ -117,7 +114,6 @@ def uniqify(seq, idfun=None):
         python list with first occurence of each item in seq, in order
     '''
     try:
-
         # order preserving
         if idfun is None:
             def idfun(x): return x
@@ -140,7 +136,6 @@ def is_unique(seq):
 
     return len(seq) == len(uniqify(seq))
 
-
 def FastArrayUniqify(X):
     '''
     Very fast uniqify routine for numpy array
@@ -159,7 +154,6 @@ def FastArrayUniqify(X):
     s = X.argsort()
     X = X[s]
     return [numpy.append([True],X[1:] != X[:-1]),s]
-
 
 def FastRecarrayUniqify(X):
     '''
@@ -180,7 +174,6 @@ def FastRecarrayUniqify(X):
     X = X[s]
     return [numpy.append([True],X[1:] != X[:-1]),s]
 
-
 def DirName(path):
     '''
     utility that gets dir name;  sometimes this is the right thing to use intead of os.path.dirname itself
@@ -188,7 +181,6 @@ def DirName(path):
     if path[-1] == '/':
         path = path[:-1]
     return os.path.dirname(path)
-
 
 def compile_expr( expr ):
     """Return a code object for the given expression.  Shorthand for compile( expr, 'this_filename', 'eval' )."""
@@ -198,10 +190,8 @@ def chkExists( path ):
     """If the given file or directory does not exist, raise an exception"""
     if not os.path.exists(path): raise IOError("Directory or file %s does not exist" % path)
 
-
 def PathCompress(path):
     return path.replace('../','')
-
 
 def redirect(x,To):
     '''
@@ -233,7 +223,6 @@ def ListArrayTranspose(L):
     '''
     return [[row[i] for row in L] for i in range(len(L[0]))]
 
-
 def GetFunctionsDefinedInModule(Module):
     '''
     Given live module, use inspect module to capture list of functions in
@@ -241,7 +230,6 @@ def GetFunctionsDefinedInModule(Module):
     '''
     Z = inspect.getmembers(Module)
     return dict([(a[0],a[1]) for a in Z if type(a[1]) == types.FunctionType and a[1].__module__ == Module.__name__ ])
-
 
 def GetFunctionsMentionedInModule(Module):
     '''
@@ -252,10 +240,8 @@ def GetFunctionsMentionedInModule(Module):
     Z = inspect.getmembers(Module)
     return dict([(a[0],a[1]) for a in Z if type(a[1]) == types.FunctionType])
 
-
 def RedirectList(ToRedirect,To):
     return tuple([redirect(x,To) for x in ToRedirect])
-
 
 def FixedPath(path):
     '''
@@ -268,7 +254,6 @@ def FixedPath(path):
     if path[:3] != '../':
         path = '../Temp/' + path
     return os.path.normpath(path)
-
 
 def GetDataEnvironmentDirectory():
     x = os.environ
@@ -284,14 +269,12 @@ def PathAlong(a,b):
     '''
     return PathStrictlyAlong(a,b) or (FixedPath(a) == FixedPath(b))
 
-
 def PathStrictlyAlong(a,b):
     '''
     returns true when path a is strictly insider the filetree under path b.
     '''
     a = FixedPath(a); b = FixedPath(b)
     return len(a) > len(b) and a[:len(b)] == b and (a[len(b)] == '/' or b[-1] == '/')
-
 
 def funcname():
     '''
@@ -306,20 +289,17 @@ def caller(level = 2):
     '''
     return sys._getframe(level).f_code.co_name
 
-
 def callermodule():
     '''
     returns name of module from which the function that  is calling caller() was imported
     '''
     return sys._getframe(2).f_code.co_filename
 
-
 def TimeStamp(T = None):
     '''
         deprecated TimeStamp function (should be replaced by time module formatters)
     '''
     return time.localtime(T).__str__().replace(',','_').replace(' ','').strip('()')
-
 
 def Union(ListOfSets):
     '''
@@ -376,7 +356,6 @@ def activator(f,l1,l2,*l3):
     if l3 != ():
         f.__objector__ = l3[0]
     return f
-
 
 def annotate(x,y,*z):
     return lambda f: annotator(f,x,y,*z)
@@ -449,10 +428,8 @@ def MakeDir(DirName,creates = ()):
             delete(DirName)
     os.mkdir(DirName)
 
-
 def MakeDirs(DirName):
     os.makedirs(DirName)
-
 
 def strongcopy(tocopy,destination,use2 = False):
     '''
@@ -504,11 +481,9 @@ def delete(ToDelete):
     elif os.path.isdir(ToDelete):
         shutil.rmtree(ToDelete)
 
-
 def Log(s):
     """Log a debug message"""
     # by default, do nothing.
-
 
 def TemplateInstance(templatepath,outpath, **kws):
     '''
@@ -522,14 +497,12 @@ def TemplateInstance(templatepath,outpath, **kws):
     OutFile.write(NewString)
     OutFile.close()
 
-
 def MakeT(r):
     '''
     If input 'r' is a comma-delimited string, return tuple split on
     commas, else return tuple(r)
     '''
     return () if r is None else (tuple(r.split(',')) if isinstance(r,str) else tuple(r) )
-
 
 def getKalong(LL1,LL2,k):
     '''
@@ -588,7 +561,6 @@ def getKalong(LL1,LL2,k):
 
     return [s1,s2,W,U]
 
-
 def maximalpathalong(YY,ZZ):
     '''
     Fast function for determining indices of elements of YY such that
@@ -596,12 +568,11 @@ def maximalpathalong(YY,ZZ):
     and ZZ.  When YY[i] is path along several element of ZZ, returns
     index of the first occurence of the closest path.  If YY[i] is not
     path-along any elements of Z, returns ''.
-
     '''
 
     ZZ = ZZ.copy() ; ZZ.sort()
-#   Y =  numpy.array([y + '/' if y[-1] != '/' else y for y in YY])
-#   Z = numpy.array([y + '/' if y[-1] != '/' else y for y in ZZ])
+    # Y =  numpy.array([y + '/' if y[-1] != '/' else y for y in YY])
+    # Z = numpy.array([y + '/' if y[-1] != '/' else y for y in ZZ])
     Y = YY
     Z = ZZ
     SlashList = numpy.array([len(y.split('/')) - (1 if y[-1] == '/' else 0) for y in Z])
@@ -617,7 +588,6 @@ def maximalpathalong(YY,ZZ):
 
     z = numpy.append(ZZ,[''])
     return z[C]
-
 
 def getpathalong(YY,ZZ):
     '''
@@ -646,12 +616,10 @@ def getpathalong(YY,ZZ):
     then
 
     getpathalong(LL1,LL2) = [A,B] = [[0,3,0],[3,4,0]]
-
-
     '''
 
-#   Y = numpy.array([y[:-1] if y[-1] == '/' else y for y in YY])
-#   Z = numpy.array([z[:-1] if z[-1] == '/' else z for z in ZZ])
+    #   Y = numpy.array([y[:-1] if y[-1] == '/' else y for y in YY])
+    #   Z = numpy.array([z[:-1] if z[-1] == '/' else z for z in ZZ])
     Y =  numpy.array([y + '/' if y[-1] != '/' else y for y in YY])
     Z = numpy.array([y + '/' if y[-1] != '/' else y for y in ZZ])
     SlashList = numpy.array([len(y.split('/')) - (1 if y[-1] == '/' else 0) for y in Y])
@@ -661,13 +629,14 @@ def getpathalong(YY,ZZ):
     U = numpy.zeros(len(Y),int)
 
     for i in range(Min,Max+1):
-        T = numpy.array(['/'.join(z.split('/')[:i]) + ('/' if len(z.split('/')) > i else '')  for z in Z ])    #get i-reduced slash list from Z, call it T
+        #get i-reduced slash list from Z, call it T
+        T = numpy.array(['/'.join(z.split('/')[:i]) + ('/' if len(z.split('/')) > i else '')  for z in Z ], dtype = '<U32')
         R = (T[1:] != T[:-1]).nonzero()[0]
         R = numpy.append(R,numpy.array([len(T)-1]))
         M = R[R.searchsorted(list(range(len(T))))]
         #get set of guys in Y with i slashes, call it L
         L = (SlashList == i)
-        H = Y[L]
+        H = numpy.array(Y[L], dtype = '<U32')
         D = T.searchsorted(H)
         T = numpy.append(T,numpy.array([0]))
         M = numpy.append(M,numpy.array([0]))
@@ -675,7 +644,6 @@ def getpathalong(YY,ZZ):
         U[L] = (T[D] == H) * (M[D] + 1)
 
     return [W,U]
-
 
 def getpathalongs(Y,Z):
     '''
@@ -689,7 +657,6 @@ def getpathalongs(Y,Z):
     L = ListUnion([list(range(A[i],B[i])) for i in range(len(A)) if A[i] < B[i]])
     return s[L]
 
-
 def getpathstrictlyalong(YY,ZZ):
     '''
         Version of getpathalong that requires "strictly path along"
@@ -699,7 +666,6 @@ def getpathstrictlyalong(YY,ZZ):
     ZZ = numpy.array([y + '/' if y[-1] != '/' else y for y in ZZ])
     [C,D] = fastequalspairs(YY,ZZ)
     return [D,B]
-
 
 def fastequalspairs(Y,Z):
     '''
@@ -728,7 +694,6 @@ def fastequalspairs(Y,Z):
     U = (T[D] == Y) * (M[D] + 1)
 
     return [W,U]
-
 
 def ModContents(obj,Cond = None):
     '''
@@ -765,7 +730,6 @@ def Contents(obj):
     else:
         return ''.join([Contents(newobj) for newobj in obj.contents])
 
-
 def fastisin(Y,Z):
     '''
     fast routine for determining indices of elements in numpy array
@@ -786,7 +750,6 @@ def fastisin(Y,Z):
             return (T[D] == Y)
     else:
         return numpy.zeros((len(Y),),bool)
-
 
 def FastRecarrayEquals(Y,Z):
     '''
@@ -816,7 +779,7 @@ def is_file_name(name):
 def IsDotPath(s,path=None):
     '''
     Determine whether s is possible valid dot path of a python module, and is
-    more accurante when the putative real (relative) file path is
+    more accurate when the putative real (relative) file path is
     given in path.   (If path argument is given this requires path to
     be a DataEnvironment-relative path, starting with ../)
     '''
@@ -826,10 +789,8 @@ def IsDotPath(s,path=None):
     else:
         return step1 and path.endswith('.py') and s == path[:-3].strip('./').replace('/','.')
 
-
 def IsPythonFile(path):
     return is_string_like(path) and path.endswith('.py') and IsFile(path)
-
 
 def FastRecarrayIsIn(Y,Z):
     '''
@@ -844,7 +805,6 @@ def FastRecarrayIsIn(Y,Z):
         NewZ = numpy.array([str(l) for l in Z])
         NewZ.sort()
         return fastisin(NewY,NewZ)
-
 
 def FastRecarrayDifference(X,Y):
     '''
@@ -874,7 +834,6 @@ def fastarraymax(X,Y):
     Z[B] = X[B]
     return Z
 
-
 def fastarraymin(X,Y):
     '''
     fast way to achieve:
@@ -890,7 +849,6 @@ def fastarraymin(X,Y):
     Z[A] = X[A]
     Z[B] = Y[B]
     return Z
-
 
 def SimpleStack(seq,UNIQIFY=False):
     '''
@@ -934,8 +892,6 @@ def SimpleStack1(seq,UNIQIFY=False):
     else:
         return seq[0][0:0]
 
-
-
 def SimpleColumnStack(seq):
     '''
     Stack columns in sequences of numpy record arrays.
@@ -945,18 +901,13 @@ def SimpleColumnStack(seq):
     names = ListUnion([list(a.dtype.names) for a in seq])
     return numpy.rec.fromarrays(Columns,names=names)
 
-
-
 def RemoveColumns(recarray,ToRemove):
     '''
     Given numpy recarray and list of column names ToRemove,
     return recarray with columns whose names are not in ToRemove
     '''
-
-
     newdtype = numpy.dtype([x for x in recarray.dtype.descr if x[0] not in ToRemove])
     return numpy.rec.fromarrays([recarray[name] for name in recarray.dtype.names if name not in ToRemove],dtype = newdtype)
-
 
 def MaximalCommonPath(PathList):
     '''
@@ -993,7 +944,6 @@ def MaximalCommonPath(PathList):
     else:
         return ''
 
-
 def Backslash(Dir,Verbose=False):
     '''
     Adds '/' to end of a path (meant to make formatting of directory
@@ -1007,7 +957,6 @@ def Backslash(Dir,Verbose=False):
     else:
         return Dir
 
-
 def MakeDirWithDummy(Dir):
     '''
         makes a directory with a empty file 'dummy' in it
@@ -1015,7 +964,6 @@ def MakeDirWithDummy(Dir):
     Dir = Backslash(Dir)
     MakeDir(Dir)
     open_for_write(Dir + 'dummy')[0].write('')
-
 
 def MakeDirWithInit(Dir):
     '''
@@ -1025,7 +973,6 @@ def MakeDirWithInit(Dir):
     Dir = Backslash(Dir)
     MakeDir(Dir)
     open_for_write(Dir + '__init__.py')[0].write('')
-
 
 def GetTimeStampedArchiveName(toarchive):
     '''
@@ -1037,12 +984,11 @@ def GetTimeStampedArchiveName(toarchive):
     modifiedpath = toarchive[3:].replace('/','__')
     return 'Archive_' + TS + '_' + modifiedpath
 
-
 def copy_to_archive(toarchive,depends_on=('../',),creates=('../Archive/',)):
     '''
         copy file or directory to archive with proper archive name
     '''
-#archives the file or folder 'toarchive' to the archive with new name generated by timestamp
+    #archives the file or folder 'toarchive' to the archive with new name generated by timestamp
 
     ArchivedName = GetTimeStampedArchiveName(toarchive)
 
@@ -1055,12 +1001,11 @@ def copy_to_archive(toarchive,depends_on=('../',),creates=('../Archive/',)):
     else:
         print('ERROR: The path', toarchive, 'does not exist; nothing archived.')
 
-
 def move_to_archive(toarchive,depends_on=('../',),creates=('../Archive/',)):
     '''
     move file or directory to archive with proper archive name
     '''
-#archives the file or folder 'toarchive' to the archive with new name generated by timestamp
+    #archives the file or folder 'toarchive' to the archive with new name generated by timestamp
 
     ArchivedName = GetTimeStampedArchiveName(toarchive)
 
@@ -1072,7 +1017,6 @@ def move_to_archive(toarchive,depends_on=('../',),creates=('../Archive/',)):
         Rename(toarchive,'../Archive/' + ArchivedName)
     else:
         print('ERROR: The path', toarchive, 'does not exist; nothing archived.')
-
 
 def CompilerChecked(ToCheck):
     '''
@@ -1090,8 +1034,6 @@ def CompilerChecked(ToCheck):
             X += [L if L != '' else '^$']
     return X
 
-
-
 def CheckInOutFormulae(ExpList,S):
     '''
     Given a list ExpList of Regular expression strings and "NOT '-prefixed
@@ -1105,7 +1047,6 @@ def CheckInOutFormulae(ExpList,S):
     OutExpList = [exp[4:] for exp in ExpList if exp.startswith('NOT ')]
     F = lambda x,y,z : any([re.match(RegExp,z) != None for RegExp in x]) and not any([re.match(RegExp,z) != None for RegExp in y])
     return F(InExpList,OutExpList,S)
-
 
 def AddInitsAbove(opfile):
     '''
@@ -1122,7 +1063,6 @@ def AddInitsAbove(opfile):
 
     '''
     DirList = opfile.split('/')[:-1]
-    print(DirList)
     inner_most_dir = DirList[-1]
 
     # for ii in range(1,len(DirList)):
@@ -1189,7 +1129,6 @@ class multicaster():
         F.close()
         return self.old.write(s)
 
-
 def DictInvert(D):
     '''
         ARGUMENT:
@@ -1199,7 +1138,6 @@ def DictInvert(D):
         whose values on key 'K' are lists of keys 'k' in D such that D[k] = K
     '''
     return dict([(v,set([j for j in list(D.keys()) if D[j] == v])) for v in set(D.values())])
-
 
 def DictInvert1(D, order=None):
     '''
@@ -1212,7 +1150,6 @@ def DictInvert1(D, order=None):
     if order is None:
         order = list(D.keys())
     return dict([(v,uniqify([j for j in order if v in D[j]])) for v in uniqify(ListUnion(list(D.values())))])
-
 
 def PathExists(ToCheck):
     '''
@@ -1302,7 +1239,6 @@ def is_string_like(obj):
         **out** :  bool
 
                 Whether or not `obj` behaves like a string.
-
     """
     try:
         obj + ''
@@ -1313,6 +1249,16 @@ def is_string_like(obj):
 def is_external_url(obj):
     return is_string_like(obj) and obj.lower().startswith(('http://','https://'))
 
-
 ListAnd = all
 ListOr = any
+
+
+def main():
+
+    [A,B] = getpathalong(['/Users/jen/Desktop/PF/results', '/Users/jen/Desktop/PF/scripts'],['/Users/jen/Desktop/PF/scripts/script.py'])
+
+    print(A)
+    print(B)
+
+if __name__ == "__main__":
+    main()

@@ -745,7 +745,10 @@ def printscriptrounds(ScriptsToCall):
     return '\n'.join([RoundStartLines[i] + '\n'.join(S[i]) + RoundEndLines[i] for i in range(len(S))])
 
 def main():
-    FindOutWhatWillUpdate("/Users/jen/Desktop/PF/scripts/script.py")
+    FindOutWhatWillUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # FindOutWhatWillUpdate()
+    # FullUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
+    MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"])
 
 if __name__ == "__main__":
     main()

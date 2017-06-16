@@ -233,7 +233,6 @@ class DataEnvironmentManager(StarFlowConfig):
         pickle.dump(self.registry,registry_fh)
         registry_fh.close()
 
-
 class DataEnvironment(DataEnvironmentConfig):
 
     def __init__(self,path=None):
@@ -306,7 +305,7 @@ class DataEnvironment(DataEnvironmentConfig):
         if filters is None:
             self.load_live_module_filters()
             filters = self.live_module_filters
-            
+
         FilteredModuleFiles = []
 
         try:
@@ -325,7 +324,6 @@ class DataEnvironment(DataEnvironmentConfig):
             FilteredModuleFiles += [y for y in RawModuleFiles if CheckInOutFormulae(filters[x],y)]
 
         return FilteredModuleFiles
-
 
     def __getattr__(self,attr):
         if attr.startswith('relative_'):

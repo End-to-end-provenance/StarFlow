@@ -769,8 +769,8 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
     returns an empty recarray with the same fields as LinkList.
 
     '''
-
     UpdateList = GetI(LinkList[N3],Seed)
+
     UpdateLists = [UpdateList]
     ActivatedLinkIndices = [UpdateList[:]]
     while len(UpdateList) > 0:
@@ -792,7 +792,24 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
 
 def GetI(List,Seed):
     s = List.argsort() ; List = List[s]
-    Seed = numpy.array(Seed) ; Seed.sort()
+    Seed = numpy.array(Seed); Seed.sort()
+
+    for i in range (0, len(List)):
+        if IsDotPath(List[i]):
+            # Makes the function path into a slash path
+            # removes the specificity of the script so that filters are less strict for getpathalong
+            slash_path = List[i].replace('.', '/')
+            dir_list = slash_path.split("/")
+            short_dir_list = dir_list[:-2]
+            short_slash_path = "/".join(short_dir_list)
+            List[i] = "/" + short_slash_path
+
+        else:
+            # remove the specificity of the script name so that filters are less strict for getpathalong
+            dir_list = List[i].split('/')
+            short_dir_list = dir_list[:-1]
+            List[i] = "/".join(short_dir_list)
+
     [A,B] = getpathalong(List,Seed)
     C1 = (B > A).nonzero()[0].tolist()
     [A,B] = getpathalong(Seed,List)
@@ -823,6 +840,7 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
         Seed = Seed.split(',')
 
     LinkList = LinksFromOperations(WORKING_DE.load_live_modules())
+
     if Filter:
         LinkList = FilterForAutomaticUpdates(LinkList)
 
@@ -834,11 +852,12 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
         else:
             return set(P[level-1]['LinkTarget'])
     elif level < 0:
-        P = PropagateUpThroughLinkGraph(Seed,LinkList)
+        P = PropagateUpThroughLinkGraph(Seed,LinkList) # checking here
         if len(P) < abs(level):
             print('There are no dependencies', level, 'levels from the the seed', Seed, '.')
             return set([])
         else:
+            #then check here
             return set(P[abs(level+1)]['LinkSource'])
 
 def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices = False):
@@ -936,13 +955,14 @@ DefaultValueForAutomaticUpdates = ['^.*']
 DefaultValueForLiveModuleFilters = {'../' : ['../*']}
 
 def main():
-    # LL = LinksFromOperations(["/Users/jen/Desktop/PF/scripts/script.py"])
-    # print(LL)
-    # result = FilterForAutomaticUpdates(LL)
-    # result = PropagateUpThroughLinkGraph(["/Users/jen/Desktop/PF/scripts/script.py"], LL)
-    # print(result)
+    # LL = LinksFromOperations(['/Users/jen/Desktop/PF/scripts/script.py'])
+    # result = GetConnected("/Users/jen/Desktop/PF/scripts/script.py") #upstream info
+    # result = UpstreamLinks("/Users/jen/Desktop/PF/scripts/script.py", -1) #upstream entry
+    # result = GetConnected("/Users/jen/Desktop/PF/scripts/script.py", 1) #downstream info
 
-    GetConnected("/Users/jen/Desktop/PF/scripts/script.py")
+    #in progress
+    result = GetLinksBelow("/Users/jen/Desktop/PF/scripts/script.py") #downstream entry
+    print(result)
 
 if __name__ == "__main__":
     main()

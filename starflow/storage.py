@@ -130,10 +130,7 @@ def FindMtime(path,objectname= '',HoldTimes = None,Simple=True,
     file that the module is in.  [All of this is sort of built haphazardly in to the
     way the FindMtime function and its depedencies are written.  In the future,
     to accommodate other "Special File Types", the way this and associatd
-    functions are written would be to be made more modular.]
-
-'''
-
+    functions are written would be to be made more modular.] '''
 
     if Simple or IsFile(path):
         if HoldTimes == None or not path in list(HoldTimes.keys()):
@@ -246,7 +243,6 @@ def ListFindMtimes(FileParts,HoldTimes = None,Simple=True,
 
     return dict(list(zip(FileParts['Object'],Mtimes)))
 
-
 def BlockUpdateModuleStorage(L):
     for l in L:
         UpdateModuleStorage(l)
@@ -289,7 +285,6 @@ def GetStoredModuleTimes(path):
         return
     else:
         return
-
 
 def GetNestedObject(name,Members):
     '''
@@ -529,7 +524,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                     F = open(StoredTimesPath,'wb')
                     pickle.dump(NewStoredTimes,F)
                     F.close()
-
 
 class StoredModulePart():
     '''

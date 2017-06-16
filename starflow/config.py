@@ -330,8 +330,8 @@ class DataEnvironmentConfig(ConfigObject):
 
     def load_live_module_filters(self):
 
-        FilterPath = "/Users/jen/Desktop/StarFlow/docs/Samples/config/configure_live_module_filters.txt"
-        #print(FilterPath)
+        FilterPath = "/Users/jen/Desktop/StarFlow/docs/Samples/config/configure_live_module_filters.txt" #for global filters
+        # FilterPath = self._lmf_file #for local filters
         F = [ll for ll in open(FilterPath,'rU').read().strip('\n').split('\n') if not ll.startswith('#')]
         for i in range(len(F)):
             l = [ll.strip(' ') for ll in F[i].split(':')]

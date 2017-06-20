@@ -311,6 +311,7 @@ class DataEnvironment(DataEnvironmentConfig):
         try:
             Module = __import__(static.LOCAL_SETUP_MODULE)
             imp.reload(Module)
+            print(Module)
             fn = getattr(Module,static.LOCAL_LIVE_MODULE_FILTER_FUNCTION)
             Files =  fn(filters)
         except:
@@ -333,12 +334,12 @@ class DataEnvironment(DataEnvironmentConfig):
             raise AttributeError(attr)
 
 if __name__ == "__main__":
-    WORKING_DE = DataEnvironment()
-    print(WORKING_DE.config_dir)
-    print(WORKING_DE.archive_dir)
-    print(WORKING_DE.metadata_dir)
-    print(WORKING_DE.modules_dir)
-    print(WORKING_DE.links_dir)
+    # WORKING_DE = DataEnvironment()
+    # print(WORKING_DE.config_dir)
+    # print(WORKING_DE.archive_dir)
+    # print(WORKING_DE.metadata_dir)
+    # print(WORKING_DE.modules_dir)
+    # print(WORKING_DE.links_dir)
     # WORKING_DE.session_id_file("session_id_file")
     # print(WORKING_DE.session_id_file)
     # print(WORKING_DE.generated_code_dir)

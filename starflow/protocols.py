@@ -3,7 +3,6 @@
 Functions for implementing data protocols.
 '''
 
-
 import sys
 import os
 import inspect
@@ -25,63 +24,63 @@ WORKING_DE = DE_MANAGER.working_de
 def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = True, importsOnTop = True, instance_id = None):
 
     '''
-    Function which implements the basic protocol concept.  
-    Given an 'OpThing', which is a set of descriptions of operations 
-    and corresponding arguments to be passed to the operations, 
+    Function which implements the basic protocol concept.
+    Given an 'OpThing', which is a set of descriptions of operations
+    and corresponding arguments to be passed to the operations,
     this writes out a python module with functions making the calls.
-    
+
     ARGUMENTS:
     outfilename = pathname for the output python module, must end with .py
-    OpThing = dictionary or list.  
+    OpThing = dictionary or list.
     1) if dictionary, then:
     -- the keys are strings representing names for the concrete operations in the
-        written-out python file 
+        written-out python file
     -- for each key, say 'FName' the value is a 3-tuple: (function, internal arguments,  external arguments)
         where:
     --function is the function -- the actual python function object, NOT the just the
         function name -- to be called as the body of FName
-                    
+
     --internal arguments are values for the arguments to be pased to FName
     The internal arguments can be given in one of several forms:
         --a tuple of positional arguments
         --a dictionary of keyword arguments
-        --a 2-element list [t,d] where t is a tuple 
+        --a 2-element list [t,d] where t is a tuple
         of positional arguments and d is a
         dictionary of keyword arguments
-    
+
     --external arguments is a dictionary where:
         the keys are names of keyword arguments for FName
         the values are the default values for the keyword arguments
-                        
+
     2) if a list then:
         each element of the list is a 4-tuple
-        
+
         (FName, function, internal arguments, external arguments)
-        
-        where all these are as described just above.  
-        The only difference between the list-frmat input and 
+
+        where all these are as described just above.
+        The only difference between the list-format input and
         the dictionary format input is that the list format
         takes the keys of th dictionary and makes the
-        first element of the tuples in the list 
-        (which are now 4-tuples, as opposed to 3-tuples in 
-        the dictionary case). 
-        
-        The reason for the list format is that it the operations 
+        first element of the tuples in the list
+        (which are now 4-tuples, as opposed to 3-tuples in
+        the dictionary case).
+
+        The reason for the list format is that it the operations
         are written out to the file in the order specified in the list,
-        whereas with a dictionary the order is  determined by the 
+        whereas with a dictionary the order is  determined by the
         order of writing out the keys of the dictionary, which is
-        often not the "natural" ordering. 
-    
-    WriteMetaData: boolean, which if true has the operations write 
+        often not the "natural" ordering.
+
+    WriteMetaData: boolean, which if true has the operations write
     metadata for th operations in the outputted module.
-        
+
     RETURNS:
         NOTHING
     '''
 
     outfiledir = outfiledir or infer_instances_directory()
     prepare_instance_dir(outfiledir)
-    
+
     if outfilename is None:
         outfilename = get_outfile(instance_id,outfiledir)
 
@@ -89,31 +88,32 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
         OpList = [[s] + list(OpThing[s]) for s in OpThing.keys()]
     else:
         OpList = [list(x) for x in OpThing]
-        
+
     OpList = OpListUniqify(OpList)
+
     ModulesToImport = uniqify([op[1].__module__ for op in OpList])
-    
+
     oplines = []
 
     TagDicts = {}
     D = WORKING_DE.root_dir
-    
+
     ProtocolName = callermodule()[len(D):].rstrip('.py').replace('/','.').lstrip('.') + '.' + caller()
-    
+
     uses_args = False
-    
+
     for i in range(len(OpList)):
         OpTagDict = {}
-        
+
         assert len(OpList[i]) in [3,4], 'stepname and func and args must be specified'
         if len(OpList[i]) == 4:
             [stepname,func,args,deflinedict] = OpList[i]
         else:
             [stepname,func,args] = OpList[i]
             deflinedict = {}
-            
+
         [argdict, deflinedict, LiveDict] = get_argdict(func, args, deflinedict)
-            
+
         livetoimport = [func.__module__]
         if len(LiveDict) > 0:
             for (var,obj) in LiveDict.items():
@@ -125,17 +125,17 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
                     argdict[var] = (mod + '.' + name) if mod != '__builtin__' else name
                 if mod not in livetoimport and mod != '__builtin__':
                     livetoimport.append(mod)
-                    
+
         internalimports = list(set(livetoimport).difference(ModulesToImport))
         if internalimports:
              if importsOnTop:
                 op_importline = ''
                 ModulesToImport += internalimports
-             else:  
+             else:
                 op_importline = '\timport ' + ','.join(internalimports)
         else:
             op_importline = ''
-            
+
         pickledict = {}
         for (k,v) in argdict.items():
             if not isinstance(v,str) or k not in LiveDict.keys():
@@ -144,7 +144,7 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
                     is_equal = (eval(rep) == v)
                 except:
                     is_equal = False
-                
+
                 if is_equal:
                     argdict[k] = repr(v)
                 else:
@@ -161,10 +161,10 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
                         else:
                             if v  == existing_v:
                                 remake = False
-                    
+
                     if remake:
                         picklefh = open(picklefile,'w')
-                        try:    
+                        try:
                             cPickle.dump(v,picklefh)
                         except:
                             picklefh.close()
@@ -172,7 +172,7 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
                             raise exception.ProtocolPickleError(k,v)
                         else:
                             picklefh.close()
-                                           
+
                     pickledict[k] = (vname,picklefile)
                     argdict[k] = vname
                     deps = deflinedict.get('depends_on')
@@ -183,7 +183,7 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
                             deflinedict['depends_on'] = deps + (picklefile,)
                     else:
                         deflinedict['depends_on'] = picklefile
-                             
+
         intvals = [k for k in argdict.keys() if isinstance(k,int)]
         intvals.sort()
         posargs = tuple([argdict[k] for k in intvals])
@@ -205,34 +205,34 @@ def actualize(OpThing, outfilename = None, outfiledir = None, WriteMetaData = Tr
         metadatalines = '\n'.join(metadatadeflines)
         returnline = '\treturn ReturnDict'
         oplines.append( '\n'.join([defline, op_importline, picklelines, callline, returndefline, metadatalines, returnline]))
-        
+
         Fullstepname = outfilename.lstrip('../').rstrip('.py').replace('/','.') + '.' + stepname
         OpTagDict[Fullstepname] = 'Protocol\ ' + ProtocolName + ',\ ' + StepTag + ':\\nApply ' + func.__name__
-                
+
         if 'creates' in deflinedict.keys():
             createlist = MakeT(deflinedict['creates'])
             for j in range(len(createlist)):
                 OpTagDict[createlist[j]] =  'Protocol\ ' + ProtocolName + ',\ ' + StepTag + '\\n Output\ ' + str(j)
-                            
+
         TagDicts[Fullstepname]  = OpTagDict
 
     if uses_args:
         ModulesToImport.append('cPickle')
-        
+
     importline = 'import ' + ','.join(uniqify(ModulesToImport))
-    
+
     optext = importline + '\n\n\n' + '\n\n\n'.join(oplines)
-    
+
     F = open(outfilename,'w')
     F.write(optext)
     F.close()
-    
+
     AttachMetaData = starflow.metadata.AttachMetaData
-    
+
     OpFileMetaData = {}
     OpFileMetaData['description'] = 'This python module was created by applying ' + funcname() + ' on the protocol ' + ProtocolName + '.'
     AttachMetaData(OpFileMetaData,FileName = outfilename)
-    
+
     if WriteMetaData:
         for Fullstepname in TagDicts.keys():
             OpMetaData = {}
@@ -258,10 +258,10 @@ def infer_instances_directory():
             if hasattr(func,'__creates__'):
                 break
             else:
-                k += 1 
+                k += 1
     instances_directory = func.__creates__[0]
-    if not IsDir(instances_directory):  
-        MakeDirs(instances_directory)   
+    if not IsDir(instances_directory):
+        MakeDirs(instances_directory)
     return instances_directory
 
 def prepare_instance_dir(instances_directory):
@@ -282,20 +282,20 @@ def get_instance_id(instances_directory, instance_id):
             instance_id = max(existing_ids) + 1
         else:
             instance_id = 0
-            
+
     return instance_id
 
 def get_argfile(stepname,argname,instance_id,outfiledir):
-    instances_dir = outfiledir or infer_instances_directory()   
+    instances_dir = outfiledir or infer_instances_directory()
     instance_id = get_instance_id(instances_dir,instance_id)
     return os.path.join(instances_dir,'instance_' + str(instance_id) + '_' + stepname + '_argument_' + str(argname) + '.pickle')
 
-        
+
 def get_outfile(instance_id,outfiledir):
     instances_directory = outfiledir or infer_instances_directory()
     instance_id = get_instance_id(instances_directory,instance_id)
     outfilename = os.path.join(instances_directory , 'instance_' + str(instance_id) + '.py')
-    
+
     print("Inferred filename for target to be", outfilename)
     return outfilename
 
@@ -320,6 +320,7 @@ def get_argdict(func, args, deflinedict={}):
         posargs = ()
 
     Info = inspect.getargspec(func)
+
     Args = Info[0]
     Defaults = Info[3]
     NumPosArgs = len(Args) - (len(Defaults) if Defaults else 0)
@@ -330,7 +331,7 @@ def get_argdict(func, args, deflinedict={}):
 
     argdict = dict(list(enumerate(posargs)))
     argdict.update(kwargs)
-    
+
     if Kwargs:
         for (k,d) in zip(Kwargs,Defaults):
             if k not in argdict:
@@ -340,29 +341,28 @@ def get_argdict(func, args, deflinedict={}):
         deflinedict['depends_on'] = func.__dependor__(argdict)
     if 'creates' not in deflinedict.keys() and '__creator__' in func.func_dict.keys():
         deflinedict['creates'] = func.__creator__(argdict)
-        
+
     livedict = {}
-    if '__objector__' in func.func_dict.keys():
+    if '__objector__' in func.__dict__.keys():
         livedict = func.__objector__(argdict)
-        assert isinstance(livedict,dict) and livedict <= argdict, '__objector__ decoration must return subdictionary of input dictionary'       
-    livedict.update(dict([(var,obj) for (var,obj) in argdict.items() if (isinstance(obj,types.FunctionType) or isinstance(obj,types.BuiltinFunctionType) or isinstance(obj,types.ClassType) or isinstance(obj,types.TypeType)) and var not in livedict.keys()]))
-        
+        assert isinstance(livedict,dict) and livedict <= argdict, '__objector__ decoration must return subdictionary of input dictionary'
+    livedict.update(dict([(var,obj) for (var,obj) in argdict.items() if (isinstance(obj,types.FunctionType) or isinstance(obj,types.BuiltinFunctionType) or isinstance(obj,type)) and var not in livedict.keys()]))
+
     return [argdict, deflinedict, livedict]
 
-                                
 def OpListUniqify(OpList):
     '''
         When the OpList in the ApplyOperations2 contains multiple functions
-        that are the same, e.g. have the same contents, but perhaps not the 
-        same FName,this optimizes and retains only one of each. 
+        that are the same, e.g. have the same contents, but perhaps not the
+        same FName,this optimizes and retains only one of each.
     '''
+
     OList = numpy.array([';'.join([str(a[1]),str(a[2]),str(a[3])]) if len(a) == 4 else ';'.join([str(a[1]),str(a[2]),''])  for a in OpList])
     [D,s] = FastArrayUniqify(OList)
     si = PermInverse(s)
     R = [i for i in range(len(OList)) if D[si[i]]]
     return [OpList[r] for r in R]
-    
-    
+
 def protocolize():
     return lambda f: protocol_creates_directory(f)
 
@@ -370,20 +370,19 @@ def protocol_creates_directory(f):
     absolute_path = inspect.getfile(f)
     name = f.__name__
     DEdir = WORKING_DE.root_dir
-    
+
     relative_path = os.path.relpath(absolute_path,DEdir).rstrip('/')
     assert relative_path.endswith('.py'), 'Path must end with .py'
     generated_code_dir = WORKING_DE.relative_generated_code_dir
-    
+
     #return append_decorated_attribute(f, '__creates__', os.path.join(generated_code_dir,relative_path[:-3] ,  name + '/' ))
     f = append_decorated_attribute(f, '__creates__', os.path.join(generated_code_dir,relative_path[:-3] ,  name + '/' ))
     return add_decorated_attribute(f, '__is_fast__', 1)
-    
 
 def Applies(op,args=(),kwargs=None):
     if kwargs is None:
         kwargs = {}
-    
+
     argdict = get_argd([args,kwargs])
 
     def appfunc(f):
@@ -394,7 +393,6 @@ def Applies(op,args=(),kwargs=None):
         return f
 
     return appfunc
-    
 
 def Apply():
     fr = sys._getframe(1)
@@ -404,4 +402,46 @@ def Apply():
     op = func.__apply_op__
     [args,kwargs] = func.__apply_args__
     op(*args,**kwargs)
-    
+
+def main():
+
+    # steps needed to define OpThing
+    #
+    # funcstr = "manipulate_csv"
+    #
+    # sys.path.append("/Users/jen/Desktop/PF/scripts/")
+    # from script import manipulate_csv
+    #
+    # funcobj = manipulate_csv
+    #
+    # t = tuple()
+    #
+    # input_file = "/Users/jen/Desktop/PF/data/data.csv"
+    # output_file = "/Users/jen/Desktop/PF/results/output.csv"
+    #
+    # d = {"depends_on": input_file, "creates": output_file}
+    #
+    # test_list = list()
+    #
+    # test_list.append(funcstr)
+    # test_list.append(funcobj)
+    # test_list.append(t)
+    # test_list.append(d)
+    #
+    # test_tuple = tuple(test_list)
+    #
+    # OpThing = list()
+    #
+    # OpThing.append(test_tuple)
+    #
+    # #Use OpThing to actualize
+    # actualize(OpThing, outfilename = "jen_module.py", outfiledir = "/Users/jen/Desktop/PF/")
+
+    # item = protocolize()
+    # print(item) #<function protocolize.<locals>.<lambda> at 0x1084e1730>
+    # print(type(item)) #function
+
+    protocol_creates_directory("/Users/jen/Desktop/PF/scripts/script.py") # input is not module
+
+if __name__ == "__main__":
+    main()

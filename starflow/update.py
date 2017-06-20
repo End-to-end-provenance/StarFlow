@@ -29,7 +29,7 @@ where "Script" is the procedure that needs to be called to produce
 Target from Source.
 
 Once the sequences of links are returned to functions here, the
-UpdateLInks function calls the scripts indicated by these links,
+UpdateLinks function calls the scripts indicated by these links,
 in the rounds indicated by the sequence.
 
 There are two basic approaches to automatic updating that are
@@ -172,16 +172,21 @@ def GetSessionID():
     else:
         F = open(SsIDFile,'a+b')
         F.seek(0)
-        N = F.read().strip().strip(',').split(',')
-        if N != ['']:
-            SsID = max([int(x) for x in N]) + 1
-            F.write(',' + str(SsID))
-            F.close()
-            return SsID
-        else:
-            F.write('0')
-            F.close()
-            return 0
+
+        # N = F.read().strip().strip(',').split(',')
+        # if N != ['']:
+        #     SsID = max([int(x) for x in N]) + 1
+        #     F.write(',' + str(SsID))
+        #     F.close()
+        #     return SsID
+        # else:
+        #     F.write('0')
+        #     F.close()
+
+        #added here without if statement
+        F.write(b'0') # must write to buffer in bytes
+        F.close
+        return 0
 
 def ReleaseSessionID(idn):
     if PathExists(SsIDFile):
@@ -221,7 +226,8 @@ def MakeUpdated(Targets,Exceptions = None, Simple = True, Forced = False,
     Exceptions += list(set(USL['UpdateScript']).difference(['None']))
     LinkUpdate(USFs, Exceptions = Exceptions, Simple =Simple, Forced=Forced,Pruning=Pruning,ProtectComputed=ProtectComputed,EmailWhenDone=EmailWhenDone,CallMode=CallMode)
 
-def FullUpdate(Seed = ['../'],AU = None,Exceptions = None,Simple = True,Forced=False,Pruning=True,ProtectComputed = False,EmailWhenDone=None,CallMode=DEFAULT_CALLMODE):
+def FullUpdate(Seed = os.getcwd(), AU = None,Exceptions = None,Simple = True,Forced=False,Pruning=True,ProtectComputed = False,EmailWhenDone=None,CallMode=DEFAULT_CALLMODE):
+# def FullUpdate(Seed = ['../']):
     '''
     Implements the downstream updating style.
 
@@ -243,7 +249,8 @@ def FullUpdate(Seed = ['../'],AU = None,Exceptions = None,Simple = True,Forced=F
         Seed = Seed.split(',')
     LinkUpdate(Seed, AU = AU, Exceptions = Exceptions, Simple = Simple,Forced=Forced,Pruning=Pruning,ProtectComputed = ProtectComputed,EmailWhenDone=EmailWhenDone,CallMode=CallMode)
 
-def FindOutWhatWillUpdate(Seed = ['../'], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
+# def FindOutWhatWillUpdate(Seed = ['../']): changed default
+def FindOutWhatWillUpdate(Seed = [os.getcwd()], AU = None, Exceptions = None, Simple = True, Forced = False, Pruning=True,ProtectComputed = False):
     '''
     Determine and print out readable report indicating which files
     downstream of a seed will update (without making the actual update).
@@ -325,7 +332,6 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
     '''
 
     ScriptsToCall = ReduceListOfSetsOfScripts([set(l['UpdateScript']) for l in ActivatedLinkListSequence])
-
     if len(Union(ScriptsToCall)) > 0:
 
         [SsID,SsName,SsTemp,SsRTStore,TempStdOut] = SetupRun()
@@ -352,7 +358,7 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
 
                 DepListJ = dict([(k,DepList[getpathalongs(numpy.array(CreateDict[k]),DepList)]) for k in J])
 
-                if CallMode == 'DIRECT':
+                if CallMode == "DIRECT":
                     for (i,j) in enumerate(J):
 
                         DoOp(i,j,SsName,SsTemp,SsRTStore,CreateDict[j],IsFastDict[j],CallMode,TouchList,DepListJ[j].tolist(), EmailWhenDone)
@@ -389,13 +395,12 @@ def UpdateLinks(ActivatedLinkListSequence, Seed, AU = None, Exceptions = None,
 
                     Session.exit()
 
-
                 for (i,j) in enumerate(J):
                     TempSOIS = SsTemp + RUNSTDOUTINSESSION + '_' + j
                     InSessionStdOutToStdOut(TempSOIS,TempStdOut)
                     TempMetaFile = SsTemp + TEMPMETAFILE + '_' + j
                     if PathExists(TempMetaFile):
-                        MetaData = pickle.load(open(TempMetaFile,'r'))
+                        MetaData = pickle.load(open(TempMetaFile,'rb'))
                         NewlyCreatedScripts.update(MetaData['NCS'])
                         NoDiff.update(dict([(f,MetaData['OriginalTimes'][f]) for f in list(MetaData['IsDifferent'].keys()) if not MetaData['IsDifferent'][f]]))
                         if MetaData['ExitType'] == 'Failure':
@@ -433,9 +438,12 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
     IsDifferent = dict([(jj,False) for jj in Targets])
 
     [OriginalTimes,OrigDirInfo,TempSOIS,TempOutput,TempMetaFile] = SetupOp(j,Creates + DepListj,SsTemp)
-    ModName = '.'.join(j.split('.')[:-1]) ; OpName = j.split('.')[-1] ; ModDirName = '../' + '/'.join(j.split('.')[:-2])
-    OldATime = os.path.getatime(ModDirName) ; OldMTime = os.path.getmtime(ModDirName)
+    ModName = '.'.join(j.split('.')[:-1]) ; OpName = j.split('.')[-1]
+    ModDirName = '/' + '/'.join(j.split('.')[:-2])
+    OldATime = os.path.getatime(ModDirName)
+    OldMTime = os.path.getmtime(ModDirName)
     Command = GetCommand(j,ModName,OpName,TempSOIS,TempOutput,CallMode)
+
 
     if j not in TouchList:
         MoveToTemp(Creates,IsFast,SsRTStore)
@@ -464,7 +472,7 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
 def HandleChildJobs(j,SsTemp,EmailWhenDone,SsName,SsRTStore,IsFast,CallMode):
     TempMetaFile = os.path.join(SsTemp , TEMPMETAFILE + '_' + j)
     if PathExists(TempMetaFile):
-        MetaData = pickle.load(open(TempMetaFile,'r'))
+        MetaData = pickle.load(open(TempMetaFile,'rb'))
         child_jobs = MetaData.get('child_jobs')
 
         if child_jobs:
@@ -505,6 +513,7 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
         TrueSuccess = (ExitStatus == 0) and all([PathExists(f) for f in Creates])
 
         if not TrueSuccess:
+            print("notTrueSuccess") #HOW TO DEBUG THIS???????? NO INFO!!!!
             ExitType = 'Failure'
             printfailuremessage(j,Creates,ExitStatus)
             MoveOutGarbage(Creates,SsRTStore)
@@ -522,15 +531,14 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
                     os.utime(g,(FindAtime(g),OrigDirInfo[g][0]))
 
     MakeRuntimeMetaData(j,Creates,OriginalTimes,OrigDirInfo,RunOutput,ExitType,ExitStatus,Before,After,IsDifferent,TempSOIS)
-    F = open(TempMetaFile,'w')
+    F = open(TempMetaFile,'wb')
     TempMetaData = {'NCS':NewlyCreatedScripts,'OriginalTimes':OriginalTimes,'ExitType':ExitType,'IsDifferent':IsDifferent}
 
     if child_jobs:
         TempMetaData['child_jobs'] = child_jobs
+
     pickle.dump(TempMetaData,F)
     F.close()
-
-    print(("FINISH UP",TempMetaFile,TempMetaData))
 
     if CallMode == 'DRMAA':
         EmailResults(EmailWhenDone,'Call to ' + j + ', run ' + SsName ,TempSOIS)
@@ -628,9 +636,10 @@ def GetCommand(j,ModuleName,OpName,TempStdOutInSession,TempOutput,CallMode=DEFAU
             "sys.stderr = starflow.utils.multicaster(\"" + TempStdOutInSession + "\",sys.__stderr__)",
             "from " + ModuleName + " import " + OpName,
 #           "exec \"V = " + OpName + "()",
-            "try:\n\texec \"V = " + OpName + "()\"\nexcept:\n\ttraceback.print_exc()\n\traise Error",
+            # "try:\n\texec \"V = " + OpName + "()\"\nexcept:\n\ttraceback.print_exc()\n\traise Error",
+            "try:\n\texec (V = " + OpName + "())\nexcept:\n\ttraceback.print_exc()\n\traise Error", # switched exec" "  to exec()
             "F = open(\"" + TempOutput + "\",\"w\")",
-            "try:\n\tpickle.dump(V,F)\nexcept:\n\tprint \"Output of " + j + " cannot be pickled\"",
+            "try:\n\tpickle.dump(V,F)\nexcept:\n\tprint (\"Output of " + j + " cannot be pickled\")", #adddded () to print statemenn
             "F.close()'"]
     Command = '\n'.join(Commands)
 
@@ -745,10 +754,19 @@ def printscriptrounds(ScriptsToCall):
     return '\n'.join([RoundStartLines[i] + '\n'.join(S[i]) + RoundEndLines[i] for i in range(len(S))])
 
 def main():
-    FindOutWhatWillUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # FindOutWhatWillUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
     # FindOutWhatWillUpdate()
-    # FullUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
-    MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # FindOutWhatWillUpdate(Forced = True)
+    # returns the function manipulate_csv but not file output.csv
+    # only listing operations, not output?
+
+    FullUpdate(["/Users/jen/Desktop/PF/scripts/script.py"]) #manipulate_csv
+    # FullUpdate() # manipulate_csv
+    # error in FinishUp, notTrueSuccess, Updates cancelled
+
+    # MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"])
+    #Nothing would be called.
+    #Test with larger example where operations above
 
 if __name__ == "__main__":
     main()

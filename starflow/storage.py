@@ -474,7 +474,6 @@ def UpdateModuleStorage(path,creates = WORKING_DE.relative_root_dir,Force = Fals
                         StoredTimes = {}
                         StoredModule = {}
 
-
                 dir_name = path.split('/')[-2]
                 module_name = inspect.getmodulename(path)
                 ModuleName = dir_name + "." + module_name

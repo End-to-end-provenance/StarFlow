@@ -741,7 +741,7 @@ def PropagateUpThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.relative_r
 def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
 
     '''
-    Does the maing propagation of a seed through a linklist.
+    Does the main propagation of a seed through a linklist.
     A fairly general graph propagation function.  In words,
     this is a (basically) a trace through the Directred Acyclic Graph
     represented by interpreting (LinkList[N1],LinkList[N2]) as the
@@ -769,8 +769,8 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
     returns an empty recarray with the same fields as LinkList.
 
     '''
-    UpdateList = GetI(LinkList[N3],Seed)
 
+    UpdateList = GetI(LinkList[N3],Seed)
     UpdateLists = [UpdateList]
     ActivatedLinkIndices = [UpdateList[:]]
     while len(UpdateList) > 0:
@@ -962,7 +962,20 @@ def main():
 
     #in progress
     result = GetLinksBelow("/Users/jen/Desktop/PF/scripts/script.py") #downstream entry
+    # extra fields are nan. how to get these?
     print(result)
+
+    # LL = LinksFromOperations(['/Users/jen/Desktop/Env/scripts/my_module.py'])
+    # print(LL)
+    # result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py") #upstream none.
+    #circular dependencies
+    # result = UpstreamLinks("/Users/jen/Desktop/Env/scripts/my_module.py")
+    #circular dependencies
+    # print(result)
+    # result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py", 1) # downstream
+    # result = GetLinksBelow("/Users/jen/Desktop/Env/scripts/my_module.py", 1)
+    #int object is not iterable
+    # print(result)
 
 if __name__ == "__main__":
     main()

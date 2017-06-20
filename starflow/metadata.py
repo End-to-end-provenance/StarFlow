@@ -47,19 +47,19 @@ import traceback
 import tabular as tb
 import pickle as pickle
 
-print(tb.__file__)
-
 from starflow.utils import *
 from starflow.storage import StoredDocstring
 from starflow import static
 import starflow.de as de
 import imp
+
 DE_MANAGER = de.DataEnvironmentManager()
 WORKING_DE = DE_MANAGER.working_de
 
+from datetime import datetime
+
 def AttachMetaData(NewMetaData,FileName = '',OperationName='',Resources = None,
                    creates = WORKING_DE.relative_metadata_dir):
-
     '''
     Attach metadata to a file a given path.
 
@@ -73,9 +73,7 @@ def AttachMetaData(NewMetaData,FileName = '',OperationName='',Resources = None,
     Metadata attached through this process is put into the file
         MetaDataPath/AttachedMetaData.pickle.
     If this path exists at the time that an AttachMetaData command is run,
-    the metadata dictionary in the file is updated with the NewMetaData dictionary.
-
-    '''
+    the metadata dictionary in the file is updated with the NewMetaData dictionary. '''
 
     assert isinstance(NewMetaData,dict), 'The metadata to attach must be a dictionary.'
 
@@ -100,12 +98,11 @@ def AttachMetaData(NewMetaData,FileName = '',OperationName='',Resources = None,
 
     ExistingMetaData.update(NewMetaData)
 
-    F = open(mdp,'w')
+    F = open(mdp,'wb')
     pickle.dump(ExistingMetaData,F)
     F.close()
 
     ProcessMetaData(metapath,FileName if FileName else OperationName,extensions=['Attached'])
-
 
 def MakeRuntimeMetaData(opname,Creates,OriginalTimes,OriginalDirInfo,RunOutput,ExitType,ExitStatus,Before,After,IsDifferent,TempSOIS):
 
@@ -127,7 +124,7 @@ def MakeRuntimeMetaData(opname,Creates,OriginalTimes,OriginalDirInfo,RunOutput,E
     in summary, it
     -- writes output of the executed function F to a file at path
         opmetadatapath(F) + '/RuntimeOutput.pickle'
-    -- appends exit status information to opmetadatapath(F) + '/ExitStatusRecord.csv'
+    -- appends exit status information to opmetadatapath(F) + '/ExitStatus.csv'
     -- for each file j created by the running of F:
         -- appends file-specific creation information to
         metadatapath(j) + '/CreationRecord.csv'
@@ -169,11 +166,11 @@ def MakeRuntimeMetaData(opname,Creates,OriginalTimes,OriginalDirInfo,RunOutput,E
             F.write(','.join([j,opname,'FromBelow',str(os.path.getmtime(j) if PathExists(j) else nan),str(OriginalDirInfo[j][0]),'0.0','1']) + '\n')
             F.close()
 
-    F = open(opmetadatapath(opname) + '/RuntimeOutput.pickle','w')
+    F = open(opmetadatapath(opname) + '/RuntimeOutput.pickle','wb')
     pickle.dump(RunOutput,F)
     F.close()
 
-    ESFName = opmetadatapath(opname) + '/ExitStatusFile.csv'
+    ESFName = opmetadatapath(opname) + '/ExitStatus.csv'
     if not PathExists(ESFName):
         F = open(ESFName,'w')
         F.write('OperationName,ExitType,ExitStatus,TimeStamp,CreateList,CreateTimeStamps,Before,After,Runtime\n')
@@ -254,7 +251,7 @@ def MakeAutomaticMetaData(objname,usedefault=False,forced=False,
             if PathAlong(metapathj,metapath) or (IsDotPath(j) and metapath == metapathj):
                 if not PathExists(metapathj):
                     MakeDirs(metapathj)
-                F = open(metapathj + '/AutomaticMetaData.pickle','w')
+                F = open(metapathj + '/AutomaticMetaData.pickle','wb')
                 pickle.dump(X[j],F)
                 F.close()
 
@@ -262,8 +259,6 @@ def MakeAutomaticMetaData(objname,usedefault=False,forced=False,
         print('... done generating automatic metadata for ', objname, '.')
     else:
         print('Automatically generated metadata for', objname, 'is not in proper format.')
-
-
 
 def DEFAULT_GenerateAutomaticMetaData(objname):
 
@@ -276,7 +271,6 @@ def DEFAULT_GenerateAutomaticMetaData(objname):
         return  {objname : D}
     else:
         return {}
-
 
 def ProcessMetaData(metapath,objname=None, extensions = None, usedefault=False,
                                          depends_on = WORKING_DE.relative_metadata_dir):
@@ -292,15 +286,15 @@ def ProcessMetaData(metapath,objname=None, extensions = None, usedefault=False,
     else:
         try:
             metadata_processor = getattr(SF,static.LOCAL_METADATA_PROCESSOR)
+            # module has no attr process_metadata.
+            # ignored since DEFAULT_MetaDataProcessor called anyway
             metadata_processor(metapath,objname=objname,extensions=extensions)
         except:
             print('Processing of metadata for', objname, 'by user-defined Processor function failed  (using default instead).  Here is the error:')
             traceback.print_exc()
             DEFAULT_MetaDataProcessor(metapath,objname=objname,extensions=extensions)
 
-
 def DEFAULT_MetaDataProcessor(metapath,objname = None, extensions = None):
-
     if objname is None:
         objname = metapath
 
@@ -309,14 +303,13 @@ def DEFAULT_MetaDataProcessor(metapath,objname = None, extensions = None):
     image = ChooseImage(metapath)
     if image:
         X['image'] = image
-    F = open(metapath + '/ProcessedMetaData.pickle','w')
+    F = open(metapath + '/ProcessedMetaData.pickle','wb')
     pickle.dump(X,F)
 
     text = SummarizeMetaData(X)
     F = open(metapath + '/MetaDataSummary.html','w')
     F.write(text)
     F.close()
-
 
 def ConsolidateSources(metapath,objname=None,extensions = None):
 
@@ -361,8 +354,6 @@ def ConsolidateSources(metapath,objname=None,extensions = None):
 
     return consolidated
 
-
-
 def SummarizeMetaData(X):
 
     if 'image' in list(X.keys()):
@@ -395,17 +386,14 @@ def SummarizeMetaData(X):
     else:
         signature = ''
 
-
     text = '<br/>'.join([x for x in [image,title,author,signature,description,keywords] if x != ''])
 
     return text
-
 
 def ChooseImage(metapath):
     images = [metapath[2:] + '/' + l for l in listdir(metapath) if 'image' in l.lower() and l.lower().endswith(('.png','.pdf','.gif','.jpg','.tiff','.bmp'))]
     if len(images) > 0:
         return images[0]
-
 
 def CombineSources(metapath,keys=None,extensions=None,depends_on = WORKING_DE.relative_metadata_dir):
 
@@ -416,7 +404,7 @@ def CombineSources(metapath,keys=None,extensions=None,depends_on = WORKING_DE.re
     for ext in extensions:
         fileext = '/' + ext + 'MetaData.pickle'
         if PathExists(metapath + fileext):
-            metadata = pickle.load(open(metapath + fileext,'r'))
+            metadata = pickle.load(open(metapath + fileext,'rb'))
             if is_string_like(metadata):
                 metadata = {'description' : metadata}
 
@@ -428,7 +416,6 @@ def CombineSources(metapath,keys=None,extensions=None,depends_on = WORKING_DE.re
                         consolidated[k].update({ext : metadata[k]})
 
     return consolidated
-
 
 def ProcessResources(metapath,metadata,objname,depends_on=WORKING_DE.relative_root_dir):
     if isinstance(metadata,dict) and 'Resources' in list(metadata.keys()):
@@ -452,17 +439,14 @@ def ProcessResources(metapath,metadata,objname,depends_on=WORKING_DE.relative_ro
                 else:
                     print('Error processing resource metadata to', objname, ': metadata name', name, 'isn\'t a file name')
 
-
-
 def tabularmetadataforms(pathlist,depends_on = WORKING_DE.relative_metadata_dir):
     attlist = ['description','author','title','keywords']
     recs1 = []
     recs2 = []
     for x in pathlist:
-        print(x)
         mdp = metadatapath(x) + '/ProcessedMetaData.pickle'
         if PathExists(mdp):
-            M = pickle.load(open(mdp))
+            M = pickle.load(open(mdp, 'rb'))
             D = {}
             for att in attlist:
                 if att in list(M.keys()):
@@ -470,6 +454,7 @@ def tabularmetadataforms(pathlist,depends_on = WORKING_DE.relative_metadata_dir)
                 else:
                     D[att] = ''
             recs1.append((x,) + tuple([D[att].replace('\n',' ') for att in attlist]))
+
             colnames = M['colnames']
             if 'coldescrs' in list(M.keys()):
                 coldescrs = [M['coldescrs'][m] if m in list(M['coldescrs'].keys()) else ''  for m in colnames]
@@ -478,8 +463,8 @@ def tabularmetadataforms(pathlist,depends_on = WORKING_DE.relative_metadata_dir)
 
             recs2 += list(zip([x]*len(colnames),colnames,coldescrs))
 
-    X = tb.tabarray(records = recs1,names=['Path'] + attlist)
-    Y = tb.tabarray(records = recs2,names = ['Path','ColName','ColDescr'])
+    X = tb.tab.tabarray(records = recs1,names=['Path'] + attlist)
+    Y = tb.tab.tabarray(records = recs2,names = ['Path','ColName','ColDescr'])
 
     return [X,Y]
 
@@ -487,8 +472,9 @@ def copymetadata(path,to,depends_on = WORKING_DE.relative_metadata_dir):
     strongcopy(os.path.join(metadatapath(path), 'ProcessedMetaData.pickle'),to)
 
 def loadmetadata(path,depends_on = WORKING_DE.relative_metadata_dir):
-    processed_file = os.path.join(metadatapath(path) , '/ProcessedMetaData.pickle')
-    if PathExists(process_file):
+    processed_file = os.path.join(metadatapath(path),'ProcessedMetaData.pickle')
+    print(processed_file)
+    if PathExists(processed_file):
         return pickle.load(open(processed_file,'rb'))
 
 def IsFailure(Path):
@@ -497,10 +483,12 @@ def IsFailure(Path):
     of an operation whose most recent run by the autmatic updater
     was a failure.
     '''
-    metapath = opmetadatapath(Path) + '/ExitStatusFile.csv'
+    metapath = os.path.join(opmetadatapath(Path), "ExitStatus.csv")
     if PathExists(metapath):
         try:
-            ESD = tb.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
+            print("tried")
+            ESD = tb.tab.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
+            print(ESD)
             ESD.sort(order = ['TimeStamp'])
             return ESD['ExitType'][-1] == 'Failure'
         except:
@@ -508,34 +496,33 @@ def IsFailure(Path):
     else:
         return False
 
-
-
 def LastTimeChanged(path):
     '''
-    Returns last time, according to runtime meta data, that a  file (at "path")
+    Returns last time, according to runtime meta data, that a file (at "path")
     was actually modified (e.g. not simply overwritten, but actually modified.)
     '''
-
 
     actualmodtime = os.path.getmtime(path)
     if actualmodtime == FindPtime(path):
         try:
-            Data = tb.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
+            Data = tb.tab.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
             if len(Data) > 0:
                 Data.sort(order=['TimeStamp'])
                 Diffs = Data['Diff'].nonzero()[0]
                 if len(Diffs) > 0:
-                    return Data['TimeStamp'][Diffs[-1]]
+                    result = Data['TimeStamp'][Diffs[-1]]
                 else:
-                    return actualmodtime
+                    #return actualmodtime
+                    result = actualmodtime
             else:
-                return actualmodtime
+                result = actualmodtime
         except:
-            return actualmodtime
+            result = actualmodtime
     else:
-        return actualmodtime
+        result = actualmodtime
 
-
+    result = datetime.fromtimestamp(result)
+    return result
 
 def FindPtime(target,Simple=False):
     '''
@@ -546,7 +533,7 @@ def FindPtime(target,Simple=False):
     metapath = metadatapath(target) + '/CreationRecord.csv'
     if PathExists(metapath):
         try:
-            Data = tb.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
+            Data = tb.tab.tabarray(SVfile = metapath,delimiter = ',', lineterminator='\n')
             if len(Data) > 0:
                 Data.sort(order=['TimeStamp'])
                 if any(Data['ExitType'] == 'Success'):
@@ -567,9 +554,45 @@ def FindPtime(target,Simple=False):
     else:
         return numpy.nan
 
-
 def metadatapath(datapath):
     return os.path.join(WORKING_DE.metadata_dir, datapath.strip('../'))
 
 def opmetadatapath(oppath):
-    return os.path.join(WORKING_DE.metadata_dir, oppath.replace('.','/'))
+    return os.path.join(WORKING_DE.metadata_dir, oppath.replace('/','', 1))
+
+def main():
+    # time = LastTimeChanged("/Users/jen/Desktop/PF/scripts/script.py") #path, not list
+    # print(time)
+
+    # new_md = {} # don't know how to format this dictionary, so loading an empty one
+    # AttachMetaData(new_md, FileName = "/Users/jen/Desktop/PF/scripts/script.py")
+
+    # copymetadata(f,to)
+    # How to call this? hard to format a dictionary from scratch?
+
+    #metadata for a file
+    # print(metadatapath("/Users/jen/Desktop/PF/scripts/script.py"))
+    # f = loadmetadata("/Users/jen/Desktop/PF/scripts/script.py")
+    # print(f) #loads empty dict. check again after make automatic metadata for file
+
+    #metadata for a function, after function called by FullUpdate
+    #use dot path instead of normal path!
+    # print(metadatapath("/Users.jen.Desktop.PF.scripts.script.manipulate_csv"))
+    # f = loadmetadata("/Users.jen.Desktop.PF.scripts.script.manipulate_csv")
+    # print(f) #loads {'Verbose': {'Automatic': ''}, 'description': ''}
+
+    # result = IsFailure("/Users.jen.Desktop.PF.scripts.script.manipulate_csv")
+    # print(result) #okay for function, not for file
+
+    # MD for file. currently empty dict. key error
+    # [X, Y] = tabularmetadataforms(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # print(X)
+    # print(Y)
+
+    # MD for function. dict exists, but still key error colnames
+    [X, Y] = tabularmetadataforms(["/Users.jen.Desktop.PF.scripts.script.manipulate_csv"])
+    print(X)
+    print(Y)
+
+if __name__ == "__main__":
+    main()

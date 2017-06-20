@@ -8,7 +8,6 @@ import tempfile
 GLOBAL_TMP_DIR = tempfile.gettempdir()
 DEBUG_FILE = os.path.join(GLOBAL_TMP_DIR, 'starflow-debug.log')
 
-
 ##non-configurable settings
 ##global
 GLOBAL_CFG_DIR = os.path.join(os.path.expanduser('~'), '.starflowcfg')

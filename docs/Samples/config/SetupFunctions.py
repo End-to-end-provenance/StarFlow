@@ -14,7 +14,7 @@ def GetLiveModules(LiveModuleFilters):
 	#for each thing in live modulefilter
 	FilteredModuleFiles = []
 	for x in LiveModuleFilters.keys():
-		RawModuleFiles = [y for y in RecursiveFileList(x,Avoid=['^RawData$','^Data$','^.svn$','^ZipCodeMaps$','.data$','^scrap$']) if y.split('.')[-1] == 'py']
+		RawModuleFiles = [y for y in RecursiveFileList(x,Avoid=['__pycache__$'])]
 		FilteredModuleFiles += [y for y in RawModuleFiles if CheckInOutFormulae(LiveModuleFilters[x],y)]
 	return FilteredModuleFiles
 

@@ -530,7 +530,8 @@ def loadSVrecs(fname, uselines=None, skiprows=0, linefixer=None,
         uselines = (0,False)
 
     if is_string_like(fname):
-        fh = file(fname, 'rU')
+        # fh = file(fname, 'rU')
+        fh = open(fname, 'rU')
     elif hasattr(fname, 'readline'):
         fh = fname
     else:
@@ -607,7 +608,8 @@ def getmetadata(fname, inflines=2500, linefixer=None, delimiter_regex=None,
                 metadata[name] = storedmetadata[name]
 
     if is_string_like(fname):
-        fh = file(fname, 'rU')
+        # fh = file(fname, 'rU')
+        fh = open(fname, 'rU')
     elif hasattr(fname, 'readline'):
         fh = fname
     else:
@@ -1094,7 +1096,9 @@ def readstoredmetadata(fname, skiprows=0, linenumber=None, comments='#',
 
     """
     if is_string_like(fname):
-        fh = file(fname, 'rU')
+        # fh = file(fname, 'rU')
+        fh = open(fname, 'rU')
+
     elif hasattr(fname, 'readline'):
         fh = fname
     else:

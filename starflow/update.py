@@ -453,7 +453,7 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
         ExitStatus = subprocess.call(PATH_TO_PYTHON + " -c " + Command, shell = True)
         After = time.time()
         os.utime(ModDirName,(OldATime,OldMTime))
-        RunOutput = pickle.load(open(TempOutput,'r')) if PathExists(TempOutput) else None
+        RunOutput = pickle.load(open(TempOutput,'rb')) if PathExists(TempOutput) else None
         child_jobs = isinstance(RunOutput,dict) and RunOutput.get('child_jobs')
         if not child_jobs:
             FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,OrigDirInfo,TempSOIS,TempMetaFile,CallMode,EmailWhenDone,SsName,SsRTStore,IsFast)
@@ -626,24 +626,38 @@ def InSessionStdOutToStdOut(TempStdOutInSession,TempStdOut):
     F.close()
 
 def GetCommand(j,ModuleName,OpName,TempStdOutInSession,TempOutput,CallMode=DEFAULT_CALLMODE):
-    #made changes to quotation marks
-    #changed exec" " to exec()
-    #changed print" " to print("")
+    #changed exec"V=obj " to exec(compile())
+    #changed print" " to print("") for python3
+
+    #shorten the ModuleName based on the current directory for proper import
+    current_dir = os.getcwd().split("/")
+    short_mod = ModuleName.split(".")
+    test = set(current_dir) - set(short_mod)
+
+    for node in current_dir:
+        if node in short_mod:
+            short_mod.remove(node)
+
+    ShortModuleName = ".".join(short_mod)
+
     Commands = ["\"import pickle,traceback",
-            "creates=('" + TempStdOutInSession + "','" + TempOutput + "')",
+                "creates=('" + TempStdOutInSession + "','" + TempOutput + "')",
             "from starflow.production import *",
             "import starflow.utils",
             "sys.stdout = starflow.utils.multicaster('" + TempStdOutInSession + "',sys.__stdout__)",
             "sys.stderr = starflow.utils.multicaster('" + TempStdOutInSession + "',sys.__stderr__)",
-            "from " + ModuleName + " import " + OpName,
-#           "exec \"V = " + OpName + "()",
-            # "try:\n\texec \"V = " + OpName + "()\"\nexcept:\n\ttraceback.print_exc()\n\traise Error",
-            "try:\n\texec (V = " + OpName + "())\nexcept:\n\ttraceback.print_exc()\n\traise Error",
+            # "from " + ModuleName + " import " + OpName + "\"", # original ModuleName
+            "from " + ShortModuleName + " import " + OpName + "", #shortened ModuleName
+
+            # "try:\n\texec(\"V=" + OpName  + ".__code__\")\nexcept:\n\ttraceback.print_exc()\n\traise Error",
+            "try:\n\texec(compile(" + OpName  + ".__name__, '<string>', mode = 'exec'))\nexcept:\n\ttraceback.print_exc()\n\traise Error",
             "F = open('" + TempOutput + "','w')",
             "try:\n\tpickle.dump(V,F)\nexcept:\n\tprint('Output of " + j + " cannot be pickled')",
-            "F.close()\""]
-    Command = '\n'.join(Commands)
+            "F.close()\""
+            ]
 
+    Command = '\n'.join(Commands)
+    print(Command)
     return Command
 
 def MoveToTemp(Creates,IsFast,SsRTStore):
@@ -771,6 +785,15 @@ def main():
     # MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"], Forced = True)
     #manipulate_csv. If you want script.py to be updated, you need to verify manipulate_csv
     #Test with larger example where operations above
+
+    #Env/my_module.py tests
+    # FindOutWhatWillUpdate()
+    # FullUpdate() # same error as above
+    # MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"], Forced = True) # None to call
+    # MakeUpdated(["Users.jen.Desktop.PF.scripts.my_module.Compare"], Forced = True)
+    # None to call
+    # Check formatting. Possible to call on a function?
+
 
 if __name__ == "__main__":
     main()

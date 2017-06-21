@@ -703,7 +703,10 @@ def GetStoredPathNames(path):
     return result
 
 def main():
-    GetStoredModule("/Users/jen/Desktop/PF/scripts/script.py", Force = True)
+    # GetStoredModule("/Users/jen/Desktop/PF/scripts/script.py", Force = True)
+
+    GetStoredModule("/Users/jen/Desktop/Env/scripts/my_module.py", Force = True)
+    # runs
 
 if __name__ == "__main__":
     main()

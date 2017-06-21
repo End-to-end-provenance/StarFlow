@@ -9,7 +9,6 @@
         to determine what data dependency links they contain
     -- Some of these functions allow you to __EXPLORE__
         the dependency network described by these links
-
 '''
 
 import os
@@ -506,7 +505,6 @@ def GetII(LinkList,Seed):
     else:
         return []
 
-
     return IC
 
 def UpdateGuts(UpdateList,LinkList,MtimesDict,PtimesDict,ProtectComputed):
@@ -561,8 +559,6 @@ def UpdateGuts(UpdateList,LinkList,MtimesDict,PtimesDict,ProtectComputed):
         -- numpy.nan, in the case of "CreatedBy" link
 
     '''
-
-
     TargetRecs = []
     for i in UpdateList:
         if i[1]:
@@ -583,6 +579,7 @@ def UpdateGuts(UpdateList,LinkList,MtimesDict,PtimesDict,ProtectComputed):
                 Activated = True
                 TimeVal = numpy.nan
             TargetRecs += [(str(i[0]),) + tuple(LinkList[i[0]]) + (i[1],TimeVal,i[2],MtimesDict[LinkList['LinkTarget'][i[0]]] if TargetExists else numpy.nan,  float(PtimesDict[LinkList['LinkTarget'][i[0]]]) if ProtectComputed else numpy.nan, Activated)]
+
     return TargetRecs
 
 def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
@@ -640,8 +637,8 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
     II = list(GetII(LinkList,Seed))
     if len(II) == 0:
         return []
-    Sources = uniqify(list(zip(LinkList['SourceFile'][II],LinkList['LinkSource'][II])))
 
+    Sources = uniqify(list(zip(LinkList['SourceFile'][II],LinkList['LinkSource'][II])))
 
     if Simple:
         print('WARNING: Using "simple" mode;  propagation may not be complete.')
@@ -653,6 +650,7 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
     LinkArraySequence = []
 
     Header = ('LinkNumber',) + LinkList.dtype.names +  ('InMarkTime','OutMarkTime','LinkTriggers','TargetModTime','TargetLastCreateTime','Activated')
+
     if ProtectComputed: PtimesDict = {}
 
     while len(UpdateList) > 0:
@@ -662,6 +660,7 @@ def PropagateThroughLinkGraphWithTimes(Seed,LinkList, Simple = False,
         if len(NewSources) > 0:
             NewMtimes = ListFindMtimes(NewSources,HoldTimes,Simple)
             MtimesDict.update(NewMtimes)
+            print(MtimesDict)
         if ProtectComputed:
             NewPtimes =  [(LinkList['LinkTarget'][i[0]], FindPtime(LinkList['LinkTarget'][i[0]],Simple=Simple)) for i in UpdateList if LinkList['LinkTarget'][i[0]] not in list(PtimesDict.keys())]
             PtimesDict.update(dict(NewPtimes))
@@ -727,7 +726,6 @@ def PropagateThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.root_dir):
     propagation from some independently activated link upstream.
 
     '''
-
     return PropagateSeed(Seed,LinkList,'LinkSource','LinkTarget','LinkSource','CreatedBy')
 
 def PropagateUpThroughLinkGraph(Seed,LinkList,depends_on = WORKING_DE.relative_root_dir):
@@ -769,7 +767,6 @@ def PropagateSeed(Seed,LinkList,N1,N2,N3,Special):
     returns an empty recarray with the same fields as LinkList.
 
     '''
-
     UpdateList = GetI(LinkList[N3],Seed)
     UpdateLists = [UpdateList]
     ActivatedLinkIndices = [UpdateList[:]]
@@ -835,7 +832,6 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
     (If none a message is printed.)
 
     '''
-
     if isinstance(Seed,str):
         Seed = Seed.split(',')
 
@@ -857,7 +853,6 @@ def GetConnected(Seed, level = -1, Filter = True,depends_on = WORKING_DE.relativ
             print('There are no dependencies', level, 'levels from the the seed', Seed, '.')
             return set([])
         else:
-            #then check here
             return set(P[abs(level+1)]['LinkSource'])
 
 def FilterForAutomaticUpdates(LList,AU = None,Exceptions = None, ReturnIndices = False):
@@ -960,22 +955,27 @@ def main():
     # result = UpstreamLinks("/Users/jen/Desktop/PF/scripts/script.py", -1) #upstream entry
     # result = GetConnected("/Users/jen/Desktop/PF/scripts/script.py", 1) #downstream info
 
-    #in progress
-    result = GetLinksBelow("/Users/jen/Desktop/PF/scripts/script.py") #downstream entry
-    # extra fields are nan. how to get these?
-    print(result)
+    #a few are nan, come back to this
+    # result = GetLinksBelow("/Users/jen/Desktop/PF/scripts/script.py")
+    # print(result)
 
     # LL = LinksFromOperations(['/Users/jen/Desktop/Env/scripts/my_module.py'])
-    # print(LL)
-    # result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py") #upstream none.
-    #circular dependencies
+    # print(LL) # saved as html in metadata
+
+    result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py")
+    #upstream
+    #calling on scripts {'None'}? circular dependencies
+    # no dependencies -1 from my_module.py
+    print(result)
     # result = UpstreamLinks("/Users/jen/Desktop/Env/scripts/my_module.py")
-    #circular dependencies
+    #calling on scripts {'None'}? circular dependencies
     # print(result)
-    # result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py", 1) # downstream
-    # result = GetLinksBelow("/Users/jen/Desktop/Env/scripts/my_module.py", 1)
-    #int object is not iterable
+
+    # result = GetConnected("/Users/jen/Desktop/Env/scripts/my_module.py", 1)
+    # downstream: good.
     # print(result)
+    # result = GetLinksBelow("/Users/jen/Desktop/Env/scripts/my_module.py")
+    # print(result) # good.
 
 if __name__ == "__main__":
     main()

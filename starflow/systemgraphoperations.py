@@ -722,7 +722,8 @@ def OutsideFile(path):
     return path.startswith('http://') or path.startswith('https://')
 
 def main():
-    MakeLocalLinkGraph("/Users/jen/Desktop/PF/scripts/script.py", Mode = 'All')
+    # MakeLocalLinkGraph("/Users/jen/Desktop/PF/scripts/script.py", Mode = 'All')
+    MakeLocalLinkGraph("/Users/jen/Desktop/Env/scripts/my_module.py", Mode = 'All')
 
 if __name__ == "__main__":
     main()

@@ -311,7 +311,6 @@ class DataEnvironment(DataEnvironmentConfig):
         try:
             Module = __import__(static.LOCAL_SETUP_MODULE)
             imp.reload(Module)
-            print(Module)
             fn = getattr(Module,static.LOCAL_LIVE_MODULE_FILTER_FUNCTION)
             Files =  fn(filters)
         except:

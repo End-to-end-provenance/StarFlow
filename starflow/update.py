@@ -117,12 +117,12 @@ from starflow.sge_utils import wait_and_get_statuses
 
 nan = numpy.nan
 
+import subprocess
 
 DE_MANAGER = de.DataEnvironmentManager()
 PATH_TO_PYTHON = DE_MANAGER.python_executable
 DEFAULT_CALLMODE = DE_MANAGER.default_callmode
 WORKING_DE = DE_MANAGER.working_de
-
 
 # places for runtime temporary things -- should be configurable based on updating engine
 TEMPFOLDER = WORKING_DE.tmp_dir
@@ -444,14 +444,13 @@ def DoOp(i,j,SsName,SsTemp,SsRTStore,CreatesList,IsFast,CallMode,TouchList,DepLi
     OldMTime = os.path.getmtime(ModDirName)
     Command = GetCommand(j,ModName,OpName,TempSOIS,TempOutput,CallMode)
 
-
     if j not in TouchList:
         MoveToTemp(Creates,IsFast,SsRTStore)
 
     if j not in TouchList:
         print('\n\nCalling ' , j, ', which makes ',  ','.join(Creates) , '...\n')
         Before = time.time()
-        ExitStatus = os.system(PATH_TO_PYTHON + " -c " + Command)
+        ExitStatus = subprocess.call(PATH_TO_PYTHON + " -c " + Command, shell = True)
         After = time.time()
         os.utime(ModDirName,(OldATime,OldMTime))
         RunOutput = pickle.load(open(TempOutput,'r')) if PathExists(TempOutput) else None
@@ -513,7 +512,7 @@ def FinishUp(j,ExitStatus,RunOutput,Before,After,Creates,DepListj,OriginalTimes,
         TrueSuccess = (ExitStatus == 0) and all([PathExists(f) for f in Creates])
 
         if not TrueSuccess:
-            print("notTrueSuccess") #HOW TO DEBUG THIS???????? NO INFO!!!!
+            print("notTrueSuccess")
             ExitType = 'Failure'
             printfailuremessage(j,Creates,ExitStatus)
             MoveOutGarbage(Creates,SsRTStore)
@@ -627,20 +626,22 @@ def InSessionStdOutToStdOut(TempStdOutInSession,TempStdOut):
     F.close()
 
 def GetCommand(j,ModuleName,OpName,TempStdOutInSession,TempOutput,CallMode=DEFAULT_CALLMODE):
-
-    Commands = ["'import pickle,traceback",
-            "creates = (\"" + TempStdOutInSession + "\",\"" + TempOutput + "\")",
+    #made changes to quotation marks
+    #changed exec" " to exec()
+    #changed print" " to print("")
+    Commands = ["\"import pickle,traceback",
+            "creates=('" + TempStdOutInSession + "','" + TempOutput + "')",
             "from starflow.production import *",
             "import starflow.utils",
-            "sys.stdout = starflow.utils.multicaster(\"" + TempStdOutInSession + "\",sys.__stdout__)",
-            "sys.stderr = starflow.utils.multicaster(\"" + TempStdOutInSession + "\",sys.__stderr__)",
+            "sys.stdout = starflow.utils.multicaster('" + TempStdOutInSession + "',sys.__stdout__)",
+            "sys.stderr = starflow.utils.multicaster('" + TempStdOutInSession + "',sys.__stderr__)",
             "from " + ModuleName + " import " + OpName,
 #           "exec \"V = " + OpName + "()",
             # "try:\n\texec \"V = " + OpName + "()\"\nexcept:\n\ttraceback.print_exc()\n\traise Error",
-            "try:\n\texec (V = " + OpName + "())\nexcept:\n\ttraceback.print_exc()\n\traise Error", # switched exec" "  to exec()
-            "F = open(\"" + TempOutput + "\",\"w\")",
-            "try:\n\tpickle.dump(V,F)\nexcept:\n\tprint (\"Output of " + j + " cannot be pickled\")", #adddded () to print statemenn
-            "F.close()'"]
+            "try:\n\texec (V = " + OpName + "())\nexcept:\n\ttraceback.print_exc()\n\traise Error",
+            "F = open('" + TempOutput + "','w')",
+            "try:\n\tpickle.dump(V,F)\nexcept:\n\tprint('Output of " + j + " cannot be pickled')",
+            "F.close()\""]
     Command = '\n'.join(Commands)
 
     return Command
@@ -755,17 +756,20 @@ def printscriptrounds(ScriptsToCall):
 
 def main():
     # FindOutWhatWillUpdate(["/Users/jen/Desktop/PF/scripts/script.py"])
+    # FindOutWhatWillUpdate(["/Users/jen/Desktop/PF/data/data.csv"])
     # FindOutWhatWillUpdate()
     # FindOutWhatWillUpdate(Forced = True)
     # returns the function manipulate_csv but not file output.csv
     # only listing operations, not output?
+    # Use Force == True if no recent changes
 
-    FullUpdate(["/Users/jen/Desktop/PF/scripts/script.py"]) #manipulate_csv
+    # FullUpdate(["/Users/jen/Desktop/PF/scripts/script.py"]) #manipulate_csv
     # FullUpdate() # manipulate_csv
+    FullUpdate(["/Users/jen/Desktop/PF/data/data.csv"], Forced = True)
     # error in FinishUp, notTrueSuccess, Updates cancelled
 
-    # MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"])
-    #Nothing would be called.
+    # MakeUpdated(["/Users/jen/Desktop/PF/scripts/script.py"], Forced = True)
+    #manipulate_csv. If you want script.py to be updated, you need to verify manipulate_csv
     #Test with larger example where operations above
 
 if __name__ == "__main__":

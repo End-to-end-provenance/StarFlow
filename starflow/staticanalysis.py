@@ -27,7 +27,6 @@ def GetFullUses(FilePath):
 		where objname is the name of an object that is referenced
 		somwhere in the definition of 'Obj' and file is the name of the
 		file where objname is defined.
-
 	'''
 
 	ModuleName = FilePath.lstrip('../').rstrip('.py').replace('/','.')
@@ -46,9 +45,7 @@ def GetFullUses(FilePath):
 	Internals = set(Mentions).intersection(list(N.keys()) + list(F.keys()))
 	InternalRefs = dict([(x,(ModuleName+'.'+x,FilePath)) for x in Internals])
 
-
 	[Externals,StarUses,MoreInternals] = usechecking(Mentions,M,N,FilePath,ModuleName,Internals,'__module__')
-
 
 	FF = {}
 	for k in list(F.keys()):
@@ -184,7 +181,6 @@ def GetUsesFromAST(e, NameDefs, ModuleUsage, NamesUsage , CurScopeName):
 				ModuleUsage[CurScopeName][l.name] = l.name
 
 	elif isinstance(e,ast.YieldFrom):
-		# changed from "From" to "YieldFrom"
 		modulename = e.getChildren()[0]
 		for f in e.getChildren()[1]:
 			attname = f[0]

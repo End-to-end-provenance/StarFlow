@@ -395,8 +395,6 @@ def NodePropertiesSelector(n,Path,ClusterDict,NodeInfo,Mode,ShowUses,ShowImplied
     target = '_top'
     return [color,style,shape,label,width,height,target,URL]
 
-
-
 def NodeTypeDeterminer(n,NodeInfo,Mode,ShowUses,ShowImplied):
     '''
         Technical dependency used in LabeledGraphFromLinks
@@ -428,7 +426,6 @@ def NodeTypeDeterminer(n,NodeInfo,Mode,ShowUses,ShowImplied):
     URL  = '/.starflow/CGI-Executables/main_gui.cgi?Path=' + Path + '&Summary=' + Summary + '&Fragment=' + Fragment + '&Representation=' + Representation + '&Mode=' + Mode + '&ShowUses=' + ShowUses + '&ShowImplied=' + ShowImplied
     return [OpType,FunctionType,Exists,Other,URL]
 
-
 def DeleteLinkGraphs():
 
     Y = RecursiveFileList(WORKING_DE.relative_metadata_dir)
@@ -436,13 +433,11 @@ def DeleteLinkGraphs():
     for z in Z:
         delete(z)
 
-
 def DeleteLocalLinkLists():
     Y = RecursiveFileList(WORKING_DE.relative_metadata_dir)
     Z = uniqify([x for x in Y if x.endswith('LocalLinkList.pickle') or x.endswith('LocalLinkListAF.pickle') ])
     for z in Z:
         delete(z)
-
 
 def inverse(S):
     '''
@@ -451,7 +446,6 @@ def inverse(S):
     T = numpy.arange(len(S))
     T = T[S]
     return T
-
 
 def GetEQ(X,Y,taglist):
     X.sort()
@@ -630,7 +624,6 @@ def WriteOutGraphDot(G,outpath):
             key-values attribute pairs for edge 'e', e.g.
             {'color':'green','shape':'box', .... }
 
-
     outpath -- path where .dot will be put
 
     RETURNS:
@@ -723,7 +716,7 @@ def OutsideFile(path):
 
 def main():
     # MakeLocalLinkGraph("/Users/jen/Desktop/PF/scripts/script.py", Mode = 'All')
-    MakeLocalLinkGraph("/Users/jen/Desktop/Env/scripts/my_module.py", Mode = 'All')
+    MakeLocalLinkGraph("/Users/jen/Desktop/Env/scripts/my_module.py", Mode = "Pro")
 
 if __name__ == "__main__":
     main()

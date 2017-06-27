@@ -1,12 +1,12 @@
 from starflow.linkmanagement import LinksFromOpsWithTimes
 import json
 
-def sort_LL(FileList):
+def sort_LL(FileList, pickle_location):
     """ gets LL with times executed field
     adjusts the LinkType values so they can be sorted
     sorts the LL based on both fields
     """
-    LL_with_times = LinksFromOpsWithTimes(FileList)
+    LL_with_times = LinksFromOpsWithTimes(FileList, pickle_location = pickle_location)
 
     i=0
     while LL_with_times['LinkType'][i]=="CreatedBy":
@@ -244,7 +244,7 @@ def make_dict(LL, FileList, first_time):
         else: #LinkType == Creates
             p_count, d_count, e_count, links_to_p_count, links_to_d_count, p_nodes_to_source_d_nodes, d_nodes_to_source_p_nodes = add_creates_link(result, link, p_count, d_count, e_count, links_to_p_count, links_to_d_count, p_nodes_to_source_d_nodes, d_nodes_to_source_p_nodes)
 
-    # add finish node? 
+    # add finish node?
 
     return result
 
@@ -252,7 +252,7 @@ def write_json(dictionary, output_json_file):
     with open(output_json_file, 'w') as outfile:
         json.dump(dictionary, outfile)
 
-def StarFlowLL_to_DDG(FileList, output_json_file):
+def StarFlowLL_to_DDG(FileList, output_json_file, pickle_location):
     """ uses the StarFlow.LinkManagement operation LinksFromOpsWithTimes
     to obtain a LL
     Uses information from LL and time_executed to make a PROV_JSON file
@@ -265,7 +265,7 @@ def StarFlowLL_to_DDG(FileList, output_json_file):
         open this file using DDGExplorer "open from file" option """
 
     #get LL
-    LL = sort_LL(FileList)
+    LL = sort_LL(FileList, pickle_location)
     # store the first time to make an informs node
     #from the start process node to the first process node
     first_time = LL[0]['time_executed']
@@ -276,14 +276,13 @@ def StarFlowLL_to_DDG(FileList, output_json_file):
     # write to file
     write_json(nested_dict, output_json_file)
 
-def main():
+# def main():
 
-    FileList = ['/Users/jen/Desktop/Env/scripts/my_module.py']
-    output_json_file = "/Users/jen/Desktop/Env/json_tests/dictionary_module.json"
+    # FileList = ['/Users/jen/Desktop/starflowTests/scripts/test1.py']
+    # pickle_location = "/Users/jen/Desktop/starflowTests/results/test1.pickle"
+    # output_json_file = "/Users/jen/Desktop/starflowTests/results/test1.json"
+    #
+    # StarFlowLL_to_DDG(FileList, output_json_file, pickle_location)
 
-    StarFlowLL_to_DDG(FileList, output_json_file)
-
-    # open using DDGExplorer "Open From File".
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
